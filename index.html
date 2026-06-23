@@ -276,9 +276,12 @@
     <div class="card card-full">
         <div class="card-title">⚽ Próximo Jogo</div>
         <div id="proximo-jogo-content" class="next-match-header">
-            <h3>Brasil x Escócia</h3>
-            <p>24 de junho de 2026 — Copa do Mundo 2026 — Fase de Grupos</p>
+            <div id="pj-logos" style="display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:12px"></div>
+            <h3 id="pj-titulo">🇧🇷 Carregando...</h3>
+            <p id="pj-data"></p>
+            <p id="pj-info" style="font-size:.85rem;color:var(--text-secondary)"></p>
             <div class="countdown" id="countdown-wrap">
+                <div class="count-box"><span id="cd-d">00</span><small>Dias</small></div>
                 <div class="count-box"><span id="cd-h">00</span><small>Horas</small></div>
                 <div class="count-box"><span id="cd-m">00</span><small>Min</small></div>
                 <div class="count-box"><span id="cd-s">00</span><small>Seg</small></div>
@@ -336,8 +339,14 @@
         <span class="modal-close" data-close="modal-bolao" role="button" tabindex="0">&times;</span>
         <h2>🎯 Fazer Palpite</h2>
         <div class="bolao-jogo-banner" id="bolao-banner">
-            <h3 id="bolao-banner-title">Brasil x Adversário</h3>
+            <div id="bolao-banner-logos" style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:8px"></div>
+            <h3 id="bolao-banner-title">Brasil × Carregando...</h3>
             <p id="bolao-banner-info">Copa do Mundo 2026</p>
+            <div id="bolao-banner-stats" style="display:flex;justify-content:center;gap:20px;margin-top:10px;font-size:.82rem;opacity:.9;flex-wrap:wrap">
+                <span>👥 Participantes: <strong id="bstat-part">—</strong></span>
+                <span>💰 Arrecadado: <strong id="bstat-arrec">—</strong></span>
+                <span>🏆 Prêmio: <strong id="bstat-premio">—</strong></span>
+            </div>
         </div>
         <input type="text" id="bolao-nome" placeholder="Nome Completo *" autocomplete="name">
         <input type="tel" id="bolao-contato" placeholder="Telefone com DDD * — (63) 98416-7994" autocomplete="tel">
@@ -653,26 +662,28 @@ function gerarBrCode(chave,nome,cidade,valor){
 /* ==========================================================================
    API FETCH DA COPA
    ========================================================================== */
-async function fetchLiveDadosCopa(){
+async function fetchLiveDadosCopa(auto=false){
     const btn=document.getElementById('btn-atualizar');
     const dot=document.getElementById('api-dot');
     const txt=document.getElementById('api-text');
-    btn.disabled=true; btn.innerHTML='⏳ Atualizando...';
+    if(!auto){btn.disabled=true;btn.innerHTML='⏳ Atualizando...';}
     dot.style.background='var(--warning-color)'; txt.innerText='Buscando dados...';
     try{
         const ctrl=new AbortController();
         const tid=setTimeout(()=>ctrl.abort(),FETCH_TIMEOUT);
-        const res=await fetch(`${PROXY_BASE}/competitions/WC/matches`,{signal:ctrl.signal});
+        const res=await fetch(`${PROXY_BASE}/competitions/WC/matches`,{signal:ctrl.signal,cache:'no-store'});
         clearTimeout(tid);
         if(!res.ok)throw new Error(`HTTP ${res.status}`);
         const data=await res.json();
+        console.log('[API] Dados da Copa recebidos. Partidas:',data.matches?.length);
         processarDadosCopa(data);
         dot.style.background='var(--br-green)'; txt.innerText='Dados atualizados ✓';
     }catch(e){
+        console.error('[API] Erro ao buscar dados da Copa:',e.message);
         dot.style.background='var(--danger-color)'; txt.innerText='Erro: '+e.message;
         renderAllData();
     }finally{
-        btn.disabled=false; btn.innerHTML='🔄 Atualizar Dados';
+        if(!auto){btn.disabled=false;btn.innerHTML='🔄 Atualizar Dados';}
     }
 }
 
@@ -687,10 +698,19 @@ function processarDadosCopa(data){
     if(proximas.length>0){
         const m=proximas[0];
         const isBrasil=(m.homeTeam?.name||'').toLowerCase().includes('braz')||(m.homeTeam?.name||'').toLowerCase().includes('bras');
-        const adv=isBrasil?(m.awayTeam?.shortName||m.awayTeam?.name):(m.homeTeam?.shortName||m.homeTeam?.name);
-        dataCopa.proximoJogo.adversario=adv||dataCopa.proximoJogo.adversario;
+        const advTeam=isBrasil?m.awayTeam:m.homeTeam;
+        const brTeam=isBrasil?m.homeTeam:m.awayTeam;
+        const adv=advTeam?.shortName||advTeam?.name||dataCopa.proximoJogo.adversario;
+        const dt=new Date(m.utcDate);
+        dataCopa.proximoJogo.adversario=adv;
         dataCopa.proximoJogo.dataISO=m.utcDate;
         dataCopa.proximoJogo.fase=traduzirFase(m.stage);
+        dataCopa.proximoJogo.advCrest=advTeam?.crest||null;
+        dataCopa.proximoJogo.brCrest=brTeam?.crest||null;
+        dataCopa.proximoJogo.dataStr=dt.toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo',day:'numeric',month:'long',year:'numeric'});
+        dataCopa.proximoJogo.horaStr=dt.toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit'})+' (Brasília)';
+        dataCopa.proximoJogo.local=m.venue||dataCopa.proximoJogo.local||'';
+        console.log('[Copa] Próximo jogo atualizado:',adv, m.utcDate);
     }
     // Jogos passados do Brasil
     const passados=brMatches.filter(m=>m.status==='FINISHED').sort((a,b)=>new Date(b.utcDate)-new Date(a.utcDate));
@@ -724,11 +744,21 @@ function renderAllData(){
 
 function renderProximoJogo(){
     const j=dataCopa.proximoJogo;
-    document.getElementById('proximo-jogo-content').innerHTML=`
-        <h3>🇧🇷 Brasil × ${esc(j.adversario)}</h3>
-        <p>${esc(j.dataStr)} — ${esc(j.horaStr)}</p>
-        <p style="font-size:.85rem;color:var(--text-secondary)">${esc(j.local||'')} — ${esc(j.fase)} — ${esc(j.competicao)}</p>
+    // Logos
+    const logoSize='56px';
+    const brCrest=j.brCrest||'https://crests.football-data.org/764.png';
+    const advCrest=j.advCrest||null;
+    const advLogoHtml=advCrest
+        ?`<img src="${esc(advCrest)}" alt="${esc(j.adversario)}" style="height:${logoSize};width:${logoSize};object-fit:contain;border-radius:4px" onerror="this.style.display='none'">`
+        :`<div style="height:${logoSize};width:${logoSize};border-radius:50%;background:var(--br-blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.75rem;text-align:center;padding:4px">${esc(j.adversario.substring(0,3).toUpperCase())}</div>`;
+    document.getElementById('pj-logos').innerHTML=`
+        <img src="${esc(brCrest)}" alt="Brasil" style="height:${logoSize};width:${logoSize};object-fit:contain" onerror="this.textContent='🇧🇷';this.style.fontSize='2.5rem'">
+        <span style="font-size:1.4rem;font-weight:800;color:var(--br-yellow)">×</span>
+        ${advLogoHtml}
     `;
+    document.getElementById('pj-titulo').textContent=`Brasil × ${j.adversario}`;
+    document.getElementById('pj-data').textContent=`${j.dataStr} — ${j.horaStr}`;
+    document.getElementById('pj-info').textContent=`${j.local?j.local+' — ':''}${j.fase} — ${j.competicao}`;
     document.getElementById('bolao-jogo-info').textContent=`Brasil × ${j.adversario} — ${j.competicao}`;
 }
 
@@ -784,14 +814,26 @@ function iniciarCountdown(){
     if(cdownId)clearInterval(cdownId);
     const target=new Date(dataCopa.proximoJogo.dataISO).getTime();
     function tick(){
+        const elH=document.getElementById('cd-h');
+        const elM=document.getElementById('cd-m');
+        const elS=document.getElementById('cd-s');
+        const elD=document.getElementById('cd-d');
+        if(!elH||!elM||!elS)return;
         const diff=target-Date.now();
-        if(diff<=0){document.getElementById('cd-h').textContent='00';document.getElementById('cd-m').textContent='00';document.getElementById('cd-s').textContent='00';return}
-        const h=Math.floor(diff/3600000);
-        const m=Math.floor((diff%3600000)/60000);
-        const s=Math.floor((diff%60000)/1000);
-        document.getElementById('cd-h').textContent=String(h).padStart(2,'0');
-        document.getElementById('cd-m').textContent=String(m).padStart(2,'0');
-        document.getElementById('cd-s').textContent=String(s).padStart(2,'0');
+        if(diff<=0){
+            if(elD)elD.textContent='00';
+            elH.textContent='00';elM.textContent='00';elS.textContent='00';
+            return;
+        }
+        const totalSec=Math.floor(diff/1000);
+        const d=Math.floor(totalSec/86400);
+        const h=Math.floor((totalSec%86400)/3600);
+        const m=Math.floor((totalSec%3600)/60);
+        const s=totalSec%60;
+        if(elD)elD.textContent=String(d).padStart(2,'0');
+        elH.textContent=String(h).padStart(2,'0');
+        elM.textContent=String(m).padStart(2,'0');
+        elS.textContent=String(s).padStart(2,'0');
     }
     tick(); cdownId=setInterval(tick,1000);
 }
@@ -805,10 +847,70 @@ async function carregarProximaPartidaParaBolao(){
         if(res.ok){
             const j=await res.json();
             jogoAtual=j;
-            document.getElementById('bolao-banner-title').textContent=`Brasil × ${j.adversario}`;
-            document.getElementById('bolao-banner-info').textContent=`${j.competicao} — ${j.fase} — ${fmtDateOnly(j.data_jogo)}`;
+            // Sincroniza com dataCopa para o render ficar correto
+            if(j.adversario){
+                dataCopa.proximoJogo.adversario=j.adversario;
+                dataCopa.proximoJogo.fase=j.fase||dataCopa.proximoJogo.fase;
+                dataCopa.proximoJogo.competicao=j.competicao||dataCopa.proximoJogo.competicao;
+                if(j.data_jogo){
+                    const dt=new Date(j.data_jogo);
+                    dataCopa.proximoJogo.dataISO=j.data_jogo;
+                    dataCopa.proximoJogo.dataStr=dt.toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo',day:'numeric',month:'long',year:'numeric'});
+                    dataCopa.proximoJogo.horaStr=dt.toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit'})+' (Brasília)';
+                }
+            }
+            // Atualiza banner do modal
+            const advCrest=dataCopa.proximoJogo.advCrest;
+            const bannerLogos=document.getElementById('bolao-banner-logos');
+            if(bannerLogos){
+                const brCrest='https://crests.football-data.org/764.png';
+                const advHtml=advCrest
+                    ?`<img src="${esc(advCrest)}" alt="${esc(j.adversario)}" style="height:40px;object-fit:contain;border-radius:3px" onerror="this.style.display='none'">`
+                    :`<span style="font-size:1.5rem">⚽</span>`;
+                bannerLogos.innerHTML=`<img src="${esc(brCrest)}" alt="Brasil" style="height:40px;object-fit:contain" onerror="this.style.display='none'"><span style="font-weight:800;font-size:1rem;color:#fff">×</span>${advHtml}`;
+            }
+            const title=document.getElementById('bolao-banner-title');
+            const info=document.getElementById('bolao-banner-info');
+            if(title)title.textContent=`Brasil × ${j.adversario}`;
+            if(info)info.textContent=`${j.competicao} — ${j.fase} — ${dataCopa.proximoJogo.dataStr}`;
             document.getElementById('bolao-jogo-info').textContent=`Brasil × ${j.adversario} — ${j.competicao}`;
+            // Reinicia countdown com data correta
+            iniciarCountdown();
+            renderProximoJogo();
+            // Busca stats do jogo atual
+            if(j.id)carregarStatsBolao(j.id);
         }
+    }catch(e){console.error('[Bolão] Erro ao carregar próxima partida:',e);}
+}
+
+async function carregarStatsBolao(jogoId){
+    try{
+        const res=await fetch(`${PROXY_BASE}/api/stats-jogo/${jogoId}`);
+        if(!res.ok)return;
+        const stats=await res.json();
+        const ep=document.getElementById('bstat-part');
+        const ea=document.getElementById('bstat-arrec');
+        const epr=document.getElementById('bstat-premio');
+        if(ep)ep.textContent=stats.total_participantes;
+        if(ea)ea.textContent=fmtBRL(stats.arrecadacao_bruta);
+        if(epr)epr.textContent=fmtBRL(stats.premiacao_liquida);
+        console.log('[Stats] Bolão atualizado:',stats);
+    }catch(e){console.warn('[Stats] Erro ao carregar stats:',e);}
+}
+
+// Atualiza stats do bolão no banner (chamado após login admin ou ao abrir bolão logado)
+async function atualizarStatsBanner(){
+    if(!jogoAtual?.id||!adminToken)return;
+    try{
+        const res=await fetch(`${PROXY_BASE}/api/admin/jogos/${jogoAtual.id}`,{headers:{Authorization:`Bearer ${adminToken}`}});
+        if(!res.ok)return;
+        const {financeiro}=await res.json();
+        const ep=document.getElementById('bstat-part');
+        const ea=document.getElementById('bstat-arrec');
+        const epr=document.getElementById('bstat-premio');
+        if(ep)ep.textContent=financeiro.apostas_pagas+financeiro.apostas_pendentes;
+        if(ea)ea.textContent=fmtBRL(financeiro.arrecadacao_bruta);
+        if(epr)epr.textContent=fmtBRL(financeiro.premiacao_liquida);
     }catch(e){}
 }
 
@@ -1042,6 +1144,7 @@ function abrirPainelAdmin(){
     openModal('modal-admin-panel');
     switchAdminTab('dashboard');
     carregarJogosParaFiltros();
+    atualizarStatsBanner();
 }
 
 function switchAdminTab(tab){
@@ -1418,7 +1521,7 @@ function initApp(){
     // Tema
     document.getElementById('theme-btn').addEventListener('click',toggleTheme);
     // Atualizar dados
-    document.getElementById('btn-atualizar').addEventListener('click',fetchLiveDadosCopa);
+    document.getElementById('btn-atualizar').addEventListener('click',()=>fetchLiveDadosCopa(false));
     // Bolão
     document.getElementById('btn-bolao').addEventListener('click',abrirBolao);
     document.getElementById('add-palpite').addEventListener('click',adicionarCampoPalpite);
@@ -1455,6 +1558,8 @@ function initApp(){
     document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.active').forEach(m=>closeModal(m.id))});
 
     renderAllData();
+    // Auto-fetch de dados ao carregar a página
+    setTimeout(()=>fetchLiveDadosCopa(true), 300);
 }
 
 document.addEventListener('DOMContentLoaded',initApp);
