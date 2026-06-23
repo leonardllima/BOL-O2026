@@ -604,35 +604,34 @@
 
     <script>
         /* ==========================================================================
-           CONFIGURAÇÕES football-data.org
+           CONFIGURAÇÃO — PROXY CLOUDFLARE WORKER
            --------------------------------------------------------------------------
-           TROCA DE PROVEDOR: a integração anterior usava a API-Football, mas
-           o plano gratuito daquele serviço trava o intervalo de temporadas
-           disponíveis (sua conta só tinha acesso a 2022-2024), e a Copa do
-           Mundo 2026 ficava fora dessa janela — sem solução por parâmetro,
-           só trocando de provedor mesmo. football-data.org mantém a Copa do
-           Mundo ("WC") de acesso gratuito permanente.
+           CAUSA RAIZ DO ERRO DE CORS (já depurado em produção):
+           a football-data.org responde a TODA chamada de chave do plano
+           gratuito com "Access-Control-Allow-Origin: http://localhost", sem
+           opção de configurar outro domínio no painel. Isso bloqueia
+           qualquer chamada feita diretamente do navegador a partir de um
+           site publicado (GitHub Pages, Netlify, etc.) — funciona só em
+           localhost. Além disso, os termos de uso da football-data.org
+           proíbem guardar o token em repositório de código aberto, o que
+           descartava colocar o token aqui mesmo que o CORS não bloqueasse.
 
-           ⚠️ IMPORTANTE: o valor abaixo é um placeholder. A chave antiga
-           (953437b5...) era da API-Football e NÃO funciona aqui — são
-           serviços diferentes, com cadastro e token próprios. Para usar a
-           atualização em tempo real:
-           1. Crie uma conta gratuita em https://www.football-data.org/client/register
-           2. Copie o token (X-Auth-Token) gerado no seu painel
-           3. Substitua o valor de API_KEY abaixo por esse token
+           SOLUÇÃO: um Cloudflare Worker (gratuito) faz a chamada por você,
+           no lado do servidor — onde CORS não existe, porque CORS é uma
+           regra do NAVEGADOR, não do servidor. O Worker devolve a resposta
+           com um header de CORS que aponta para o SEU domínio do GitHub
+           Pages, e o token fica guardado só no painel da Cloudflare, nunca
+           neste arquivo HTML.
 
-           ⚠️ DECISÃO CONSCIENTE DO USUÁRIO — TOKEN EXPOSTO NO FRONT-END:
-           Esse aviso já foi dado e se mantém válido para o novo token: ao
-           colocar o valor real aqui, qualquer pessoa que abrir "Ver
-           código-fonte" desta página vai conseguir copiá-lo. Isso é uma
-           propriedade de sites estáticos (GitHub Pages), não uma falha de
-           implementação — nenhuma ofuscação no JavaScript resolve isso.
-           Caminho de saída, se quiser eliminar esse risco no futuro: mover
-           este bloco para uma função serverless gratuita (Cloudflare
-           Workers / Vercel Functions) e apontar o fetch() para esse proxy.
+           COMO CONFIGURAR (sem usar terminal, só pelo painel da Cloudflare):
+           Veja o arquivo worker.js (entregue junto com este HTML) — ele tem
+           o passo a passo completo nos comentários do topo.
+
+           Depois de criar o Worker, troque o valor abaixo pela URL real que
+           a Cloudflare te der (algo como
+           "https://copa2026-proxy.SEU-USUARIO.workers.dev").
            ========================================================================== */
-        const API_KEY = "fffe8c519b3b4d2f84aae09af661db58";
-        const FOOTBALL_DATA_BASE = "https://api.football-data.org/v4";
+        const PROXY_BASE = "https://https://copa2026.leo2005lima.workers.dev/";
         const FETCH_TIMEOUT_MS = 8000;
 
         /* ==========================================================================
@@ -853,10 +852,10 @@
             const apiStatus = document.getElementById('api-text');
             const apiDot = document.getElementById('api-dot');
 
-            if (!API_KEY) {
-                apiStatus.innerText = "Token de API não configurado. Exibindo dados locais.";
+            if (!PROXY_BASE || PROXY_BASE.includes("COLOQUE_AQUI")) {
+                apiStatus.innerText = "Proxy (Cloudflare Worker) não configurado. Exibindo dados locais.";
                 apiDot.style.backgroundColor = "var(--warning-color)";
-                console.warn("[Copa2026] API_KEY não configurada — a busca em tempo real foi pulada para não enviar uma requisição inválida.");
+                console.warn("[Copa2026] PROXY_BASE não configurado — a busca em tempo real foi pulada. Veja as instruções em worker.js.");
                 renderAllData();
                 return;
             }
@@ -901,33 +900,31 @@
 
             try {
                 /* ==================================================================
-                   TROCA DE PROVEDOR — CAUSA RAIZ CONFIRMADA EM PRODUÇÃO (3 rodadas
-                   de depuração com a API-Football):
-                   (a) `next=1` exclusivo de planos pagos.
-                   (b) `from`/`to` sem `league` exige `season`.
-                   (c) Mesmo corrigindo (a) e (b) com league=1&season=2026, a
-                       conta gratuita retornou:
-                       {"plan":"Free plans do not have access to this season,
-                       try from 2022 to 2024."}
-                       Ou seja: o plano gratuito da API-Football trava o
-                       INTERVALO DE TEMPORADAS disponíveis (não é sobre
-                       parâmetros — é bloqueio de dados). A Copa do Mundo 2026
-                       fica fora da janela liberada para contas free.
+                   TROCA DE PROVEDOR + PROXY — histórico de causas raiz já
+                   depuradas em produção:
+                   (a) API-Football: `next=1` exclusivo de planos pagos.
+                   (b) API-Football: `from`/`to` sem `league` exige `season`.
+                   (c) API-Football: plano gratuito trava o INTERVALO DE
+                       TEMPORADAS disponíveis — a Copa 2026 ficava fora da
+                       janela liberada para contas free, problema de dados,
+                       não de parâmetros.
+                   (d) football-data.org direto do navegador: CORS sempre
+                       responde "Access-Control-Allow-Origin: http://localhost"
+                       para contas do plano gratuito, bloqueando qualquer site
+                       publicado (GitHub Pages, etc.) — funciona só local.
 
-                   SOLUÇÃO: troca para football-data.org, que mantém a Copa do
-                   Mundo (código "WC") de acesso gratuito permanente, sem essa
-                   restrição de temporada (confirmado: cobertura grátis inclui
-                   Champions League, Premier League, Brasileirão e o Mundial).
-                   Autenticação por header X-Auth-Token (formato diferente do
-                   x-apisports-key usado antes). Limite: 10 requisições/minuto.
+                   SOLUÇÃO FINAL: um Cloudflare Worker faz a chamada por nós,
+                   no servidor (onde CORS não se aplica), e devolve a
+                   resposta com CORS liberado para o nosso domínio. O token
+                   da football-data.org fica só no Worker — o navegador do
+                   usuário nunca o vê, então não precisamos (e não devemos)
+                   enviar nenhum header de autenticação aqui.
                    ================================================================== */
-                const headers = { "X-Auth-Token": API_KEY };
 
                 // Uma única chamada retorna TODOS os jogos da Copa do Mundo,
                 // já com o técnico de cada seleção embutido em homeTeam.coach /
-                // awayTeam.coach — por isso aqui basta 1 requisição (antes
-                // eram 2: uma para /coachs, outra para /fixtures).
-                const resMatches = await fetch(`${FOOTBALL_DATA_BASE}/competitions/WC/matches`, { headers, signal: controller.signal });
+                // awayTeam.coach — por isso basta 1 requisição.
+                const resMatches = await fetch(`${PROXY_BASE}/competitions/WC/matches`, { signal: controller.signal });
                 if (!resMatches.ok) {
                     throw new Error(`Falha ao buscar jogos da Copa do Mundo (HTTP ${resMatches.status})`);
                 }
@@ -962,8 +959,18 @@
 
                     const dateObj = new Date(partida.utcDate);
                     dataCopa2026.proximoJogo.dataISO = partida.utcDate;
-                    dataCopa2026.proximoJogo.dataStr = dateObj.toLocaleDateString('pt-BR');
-                    dataCopa2026.proximoJogo.horaStr = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                    // CORREÇÃO — CAUSA RAIZ DO "HORÁRIO ERRADO": a API retorna
+                    // a data em UTC (ex.: "2026-06-25T01:00:00Z"). Sem
+                    // especificar o fuso, toLocaleDateString/toLocaleTimeString
+                    // convertem para o fuso horário do DISPOSITIVO de quem
+                    // está vendo a página — que pode ser diferente do horário
+                    // de Brasília dependendo de onde a pessoa está ou de como
+                    // o computador/celular está configurado. Forçando
+                    // timeZone: 'America/Sao_Paulo' explicitamente, o horário
+                    // exibido fica correto e igual para todo mundo, sempre em
+                    // horário de Brasília, independente do dispositivo.
+                    dataCopa2026.proximoJogo.dataStr = dateObj.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+                    dataCopa2026.proximoJogo.horaStr = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }) + " (Horário de Brasília)";
                     dataCopa2026.proximoJogo.local = partida.venue || "Local a confirmar";
                     dataCopa2026.proximoJogo.fase = partida.stage ? partida.stage.replaceAll('_', ' ') : "Copa do Mundo FIFA 2026";
 
