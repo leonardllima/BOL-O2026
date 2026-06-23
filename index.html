@@ -444,47 +444,51 @@
             .count-box { min-width: 62px; padding: 10px 6px; }
             .count-box span { font-size: 1.5rem; }
         }
-.modal-bolao{
-    display:none;
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.8);
-    z-index:9999;
-    justify-content:center;
-    align-items:center;
-    padding:20px;
-}
 
-.modal-bolao-content{
-    background:var(--surface-color);
-    width:100%;
-    max-width:700px;
-    padding:25px;
-    border-radius:12px;
-}
+        /* ==========================================================================
+           MODAL DO BOLÃO
+           ========================================================================== */
+        .modal-bolao {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
 
-.modal-bolao-content input{
-    width:100%;
-    padding:12px;
-    margin-bottom:10px;
-}
+        .modal-bolao-content {
+            background: var(--surface-color);
+            width: 100%;
+            max-width: 700px;
+            padding: 25px;
+            border-radius: 12px;
+        }
 
-.palpite-item{
-    display:flex;
-    gap:10px;
-    margin-bottom:10px;
-}
+        .modal-bolao-content input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
 
-.palpite-item input{
-    flex:1;
-}
+        .palpite-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
 
-#fechar-bolao{
-    float:right;
-    cursor:pointer;
-    font-size:24px;
-    font-weight:bold;
-}
+        .palpite-item input {
+            flex: 1;
+        }
+
+        #fechar-bolao {
+            float: right;
+            cursor: pointer;
+            font-size: 24px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -560,43 +564,44 @@
             <div class="next-match-header" id="proximo-jogo-content"></div>
         </div>
 
-<div class="card card-full" id="bolao-card">
-    <h2 class="card-title">🎯 Bolão Oficial da Copa</h2>
+        <div class="card card-full" id="bolao-card">
+            <h2 class="card-title">🎯 Bolão Oficial da Copa</h2>
 
-    <div style="text-align:center">
+            <div style="text-align:center">
 
-        <p id="bolao-jogo-info">
-            Próximo jogo da Seleção Brasileira
-        </p>
+                <p id="bolao-jogo-info">
+                    Próximo jogo da Seleção Brasileira
+                </p>
 
-        <div style="
-            margin-top:15px;
-            font-size:1.2rem;
-            font-weight:bold;
-            color:var(--br-green);
-        ">
-            R$ 5,00 por palpite
+                <div style="
+                    margin-top:15px;
+                    font-size:1.2rem;
+                    font-weight:bold;
+                    color:var(--br-green);
+                ">
+                    R$ 5,00 por palpite
+                </div>
+
+                <button
+                    id="btn-bolao"
+                    type="button"
+                    style="
+                        margin-top:20px;
+                        background:var(--br-green);
+                        color:white;
+                        border:none;
+                        padding:15px 30px;
+                        border-radius:10px;
+                        font-size:1rem;
+                        font-weight:bold;
+                        cursor:pointer;
+                    "
+                >
+                    Participar do Bolão
+                </button>
+
+            </div>
         </div>
-
-        <button
-            id="btn-bolao"
-            style="
-                margin-top:20px;
-                background:var(--br-green);
-                color:white;
-                border:none;
-                padding:15px 30px;
-                border-radius:10px;
-                font-size:1rem;
-                font-weight:bold;
-                cursor:pointer;
-            "
-        >
-            Participar do Bolão
-        </button>
-
-    </div>
-</div>
 
         <div class="card card-half">
             <h2 class="card-title">🏆 Classificação - Grupo C</h2>
@@ -623,16 +628,6 @@
         <div class="card card-half">
             <h2 class="card-title">✅ Campanha - Copa 2026</h2>
             <div id="jogos-realizados-content"></div>
-        </div>
-
-        <div class="card card-half">
-            <h2 class="card-title">📈 Estatísticas da Equipe</h2>
-            <div id="estatisticas-content"></div>
-        </div>
-
-        <div class="card card-half">
-            <h2 class="card-title">⚠️ Situação Disciplinar</h2>
-            <div id="disciplina-content"></div>
         </div>
 
         <div class="card card-full">
@@ -680,6 +675,25 @@
     <footer>
         CRIAÇÃO: LEONARDO LIMA
     </footer>
+
+    <!-- Modal do Bolão -->
+    <div id="modal-bolao" class="modal-bolao">
+        <div class="modal-bolao-content">
+            <span id="fechar-bolao" role="button" tabindex="0" aria-label="Fechar">&times;</span>
+            <h2>🎯 Participar do Bolão</h2>
+            <input type="text" id="bolao-nome" placeholder="Nome Completo">
+            <input type="text" id="bolao-whatsapp" placeholder="WhatsApp">
+            <input type="email" id="bolao-email" placeholder="Email (Opcional)">
+            <hr>
+            <div id="lista-palpites"></div>
+            <button id="add-palpite" type="button">+ Adicionar Palpite</button>
+            <div id="resumo-bolao">
+                <p>Palpites: <span id="qtd-palpites">0</span></p>
+                <p>Total: R$ <span id="valor-total">0,00</span></p>
+            </div>
+            <button id="confirmar-bolao" type="button">Confirmar Participação</button>
+        </div>
+    </div>
 
     <script>
         /* ==========================================================================
@@ -850,12 +864,6 @@
             jogosRealizados: [
                 { data: "13/06/2026", local: "Lumen Field", adv: "Marrocos", placar: "1 - 1", info: "Gols: Vini Jr (BR); En-Nesyri (MA)" },
                 { data: "19/06/2026", local: "Rose Bowl", adv: "Haiti", placar: "3 - 0", info: "Gols: Vini Jr, Rodrygo, Marquinhos (BR)" }
-            ],
-            estatisticas: { artilheiros: "Vini Jr (2), Rodrygo (1), Marquinhos (1)", assistencias: "Raphinha (2), Paquetá (1)", posseMedia: "62%", chutesAoGolMedia: "6.5 por jogo", aproveitamento: "66.6%" },
-            disciplina: [
-                { nome: "João Gomes", status: "Pendurado (1 Amarelo)", tipo: "warning" },
-                { nome: "Danilo", status: "Pendurado (1 Amarelo)", tipo: "warning" },
-                { nome: "Cartões Vermelhos", status: "Nenhum", tipo: "success" }
             ],
             // A API atualiza apenas o índice 0 (Técnico Principal), que vem
             // embutido no campo coach de cada time dentro da resposta de
@@ -1102,8 +1110,6 @@
             renderProximoJogo();
             renderGrupo();
             renderCampanha();
-            renderEstatisticas();
-            renderDisciplina();
             renderComissao();
             renderElenco();
             renderPitch();
@@ -1171,26 +1177,6 @@
                 `;
             });
             container.innerHTML = html;
-        }
-
-        function renderEstatisticas() {
-            const e = dataCopa2026.estatisticas;
-            const html = `
-                <div class="list-item"><span>⚽ Artilheiros:</span> <strong>${escapeHTML(e.artilheiros)}</strong></div>
-                <div class="list-item"><span>👟 Assistências:</span> <strong>${escapeHTML(e.assistencias)}</strong></div>
-                <div class="list-item"><span>📊 Posse Média:</span> <strong>${escapeHTML(e.posseMedia)}</strong></div>
-                <div class="list-item"><span>🎯 Chutes ao Gol/J:</span> <strong>${escapeHTML(e.chutesAoGolMedia)}</strong></div>
-                <div class="list-item"><span>📈 Aproveitamento:</span> <strong>${escapeHTML(e.aproveitamento)}</strong></div>
-            `;
-            document.getElementById('estatisticas-content').innerHTML = html;
-        }
-
-        function renderDisciplina() {
-            let html = '';
-            dataCopa2026.disciplina.forEach(d => {
-                html += `<div class="list-item"><span>${escapeHTML(d.nome)}</span><span class="badge badge-${escapeHTML(d.tipo)}">${escapeHTML(d.status)}</span></div>`;
-            });
-            document.getElementById('disciplina-content').innerHTML = html;
         }
 
         function renderComissao() {
@@ -1296,6 +1282,69 @@
         }
 
         /* ==========================================================================
+           SISTEMA DE BOLÃO
+           ========================================================================== */
+        let palpitesBolao = [];
+
+        function abrirBolao() {
+            document.getElementById("modal-bolao").style.display = "flex";
+        }
+
+        function fecharBolao() {
+            document.getElementById("modal-bolao").style.display = "none";
+        }
+
+        function atualizarResumoBolao() {
+            document.getElementById("qtd-palpites").innerText = palpitesBolao.length;
+            document.getElementById("valor-total").innerText =
+                (palpitesBolao.length * 5)
+                .toFixed(2)
+                .replace(".", ",");
+        }
+
+        function adicionarCampoPalpite() {
+            const div = document.createElement("div");
+            div.className = "palpite-item";
+            div.innerHTML = `
+                <input type="number" placeholder="Brasil" class="brasil-gols">
+                <input type="number" placeholder="Adversário" class="adv-gols">
+            `;
+            document.getElementById("lista-palpites").appendChild(div);
+            palpitesBolao.push({});
+            atualizarResumoBolao();
+        }
+
+        async function enviarBolao() {
+            const nome = document.getElementById("bolao-nome").value;
+            const whatsapp = document.getElementById("bolao-whatsapp").value;
+            const email = document.getElementById("bolao-email").value;
+
+            const palpites = [];
+            document.querySelectorAll(".palpite-item").forEach(item => {
+                palpites.push({
+                    brasil: Number(item.querySelector(".brasil-gols").value),
+                    adversario: Number(item.querySelector(".adv-gols").value)
+                });
+            });
+
+            const response = await fetch(`${PROXY_BASE}/api/bolao/participar`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    nome,
+                    whatsapp,
+                    email,
+                    jogo_id: "PROXIMO_JOGO",
+                    palpites
+                })
+            });
+
+            const resultado = await response.json();
+            alert(`Participação registrada!\n\nID: ${resultado.id}`);
+            fecharBolao();
+        }
+
+        /* ==========================================================================
            INICIALIZAÇÃO GERAL
            ========================================================================== */
         function initApp() {
@@ -1308,222 +1357,29 @@
             if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
             if (refreshBtn) refreshBtn.addEventListener('click', fetchLiveDadosCopa);
 
+            // CORREÇÃO CRÍTICA: os listeners do bolão estavam soltos no <script>
+            // fora do DOMContentLoaded, executando antes do DOM existir. Agora
+            // todos são registrados aqui, dentro de initApp (chamado no
+            // DOMContentLoaded), garantindo que os elementos já existam.
+            const btnBolao = document.getElementById('btn-bolao');
+            const fecharBolaoEl = document.getElementById('fechar-bolao');
+            const addPalpiteBtn = document.getElementById('add-palpite');
+            const confirmarBolaoBtn = document.getElementById('confirmar-bolao');
+
+            if (btnBolao) btnBolao.addEventListener('click', abrirBolao);
+            if (fecharBolaoEl) {
+                fecharBolaoEl.addEventListener('click', fecharBolao);
+                fecharBolaoEl.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fecharBolao(); }
+                });
+            }
+            if (addPalpiteBtn) addPalpiteBtn.addEventListener('click', adicionarCampoPalpite);
+            if (confirmarBolaoBtn) confirmarBolaoBtn.addEventListener('click', enviarBolao);
+
             renderAllData();
         }
 
-document
-.getElementById("btn-bolao")
-.addEventListener(
-    "click",
-    abrirBolao
-);
-
-document
-.getElementById("fechar-bolao")
-.addEventListener(
-    "click",
-    fecharBolao
-);
-
-document
-.getElementById("add-palpite")
-.addEventListener(
-    "click",
-    adicionarCampoPalpite
-);
-
-document
-.getElementById("confirmar-bolao")
-.addEventListener(
-    "click",
-    enviarBolao
-);
-let palpitesBolao = [];
-
-function abrirBolao(){
-    document
-        .getElementById("modal-bolao")
-        .style.display = "flex";
-}
-
-function fecharBolao(){
-    document
-        .getElementById("modal-bolao")
-        .style.display = "none";
-}
-
-function atualizarResumoBolao(){
-
-    document.getElementById(
-        "qtd-palpites"
-    ).innerText = palpitesBolao.length;
-
-    document.getElementById(
-        "valor-total"
-    ).innerText =
-        (palpitesBolao.length * 5)
-        .toFixed(2)
-        .replace(".", ",");
-}
-
-function adicionarCampoPalpite(){
-
-    const div =
-        document.createElement("div");
-
-    div.className =
-        "palpite-item";
-
-    div.innerHTML = `
-        <input
-            type="number"
-            placeholder="Brasil"
-            class="brasil-gols"
-        >
-
-        <input
-            type="number"
-            placeholder="Adversário"
-            class="adv-gols"
-        >
-    `;
-
-    document
-        .getElementById(
-            "lista-palpites"
-        )
-        .appendChild(div);
-
-    palpitesBolao.push({});
-
-    atualizarResumoBolao();
-}
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
-<div id="modal-bolao" class="modal-bolao">
-
-    <div class="modal-bolao-content">
-
-        <span id="fechar-bolao">&times;</span>
-
-        <h2>🎯 Participar do Bolão</h2>
-
-        <input
-            type="text"
-            id="bolao-nome"
-            placeholder="Nome Completo"
-        >
-
-        <input
-            type="text"
-            id="bolao-whatsapp"
-            placeholder="WhatsApp"
-        >
-
-        <input
-            type="email"
-            id="bolao-email"
-            placeholder="Email (Opcional)"
-        >
-
-        <hr>
-
-        <div id="lista-palpites"></div>
-
-        <button id="add-palpite">
-            + Adicionar Palpite
-        </button>
-
-        <div id="resumo-bolao">
-
-            <p>
-                Palpites:
-                <span id="qtd-palpites">0</span>
-            </p>
-
-            <p>
-                Total:
-                R$
-                <span id="valor-total">0,00</span>
-            </p>
-
-        </div>
-
-        <button id="confirmar-bolao">
-            Confirmar Participação
-        </button>
-
-    </div>
-async function enviarBolao(){
-
-    const nome =
-        document
-        .getElementById("bolao-nome")
-        .value;
-
-    const whatsapp =
-        document
-        .getElementById("bolao-whatsapp")
-        .value;
-
-    const email =
-        document
-        .getElementById("bolao-email")
-        .value;
-
-    const palpites = [];
-
-    document
-        .querySelectorAll(".palpite-item")
-        .forEach(item=>{
-
-            palpites.push({
-                brasil:
-                    Number(
-                        item.querySelector(
-                            ".brasil-gols"
-                        ).value
-                    ),
-
-                adversario:
-                    Number(
-                        item.querySelector(
-                            ".adv-gols"
-                        ).value
-                    )
-            });
-
-        });
-
-    const response =
-        await fetch(
-            `${PROXY_BASE}/api/bolao/participar`,
-            {
-                method:"POST",
-                headers:{
-                    "Content-Type":
-                        "application/json"
-                },
-                body:JSON.stringify({
-                    nome,
-                    whatsapp,
-                    email,
-                    jogo_id:
-                        "PROXIMO_JOGO",
-                    palpites
-                })
-            }
-        );
-
-    const resultado =
-        await response.json();
-
-    alert(
-        `Participação registrada!\n\nID: ${resultado.id}`
-    );
-
-    fecharBolao();
-}
-</div>
 </body>
 </html>
