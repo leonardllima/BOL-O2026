@@ -633,10 +633,10 @@ function applyPhoneMask(input){
     input.addEventListener('input',()=>{
         let v=input.value.replace(/\D/g,'');
         if(v.length>11)v=v.slice(0,11);
-        if(v.length<=2) v=v;
-        else if(v.length<=7) v='('+v.slice(0,2)+') '+v.slice(2);
-        else v='('+v.slice(0,2)+') '+v.slice(2,7)+'-'+v.slice(7);
-        input.value=v;
+        if(v.length<=2) input.value=v;
+        else if(v.length<=6) input.value='('+v.slice(0,2)+') '+v.slice(2);
+        else if(v.length<=10) input.value='('+v.slice(0,2)+') '+v.slice(2,6)+'-'+v.slice(6);
+        else input.value='('+v.slice(0,2)+') '+v.slice(2,7)+'-'+v.slice(7);
     });
 }
 
@@ -882,7 +882,7 @@ function validarBolao(){
     document.getElementById('bolao-pix').classList.remove('input-error');
     err.classList.remove('active');
     if(!nome){document.getElementById('bolao-nome').classList.add('input-error');err.innerText='⚠️ Nome é obrigatório.';err.classList.add('active');return false}
-    if(contato.length<10||contato.length>11){document.getElementById('bolao-contato').classList.add('input-error');err.innerText='⚠️ Telefone inválido. Informe DDD + número (10 ou 11 dígitos).';err.classList.add('active');return false}
+    if(contato.length<10||contato.length>11){document.getElementById('bolao-contato').classList.add('input-error');err.innerText='⚠️ Telefone inválido. Ex: (63) 98416-7994';err.classList.add('active');return false}
     if(!pix){document.getElementById('bolao-pix').classList.add('input-error');err.innerText='⚠️ Chave PIX é obrigatória.';err.classList.add('active');return false}
     if(palpitesBolao.length===0){err.innerText='⚠️ Adicione pelo menos 1 palpite.';err.classList.add('active');return false}
     for(let i=0;i<palpitesBolao.length;i++){
