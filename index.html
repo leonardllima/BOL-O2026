@@ -190,17 +190,7 @@
         footer{text-align:center;padding:22px;background:var(--sf);color:var(--ts);margin-top:36px;border-top:1px solid var(--bd);font-weight:600;font-size:.88rem}
         .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-        /* ── Escalação ── */
-        .pitch-container{width:100%;max-width:620px;height:420px;background:#388e3c;border:2px solid rgba(255,255,255,.65);position:relative;border-radius:8px;overflow:hidden;margin:18px auto 0}
-        [data-theme="dark"] .pitch-container{background:#1b5e20}
-        .pitch-container::before{content:'';position:absolute;top:50%;left:0;right:0;height:2px;background:rgba(255,255,255,.65);transform:translateY(-50%)}
-        .pitch-container::after{content:'';position:absolute;top:50%;left:50%;width:90px;height:90px;border:2px solid rgba(255,255,255,.65);border-radius:50%;transform:translate(-50%,-50%)}
-        .pa-top,.pa-bot{position:absolute;left:50%;transform:translateX(-50%);width:185px;height:65px;border:2px solid rgba(255,255,255,.65)}
-        .pa-top{top:0;border-top:none}
-        .pa-bot{bottom:0;border-bottom:none}
-        .pp{position:absolute;transform:translate(-50%,-50%);text-align:center;width:56px;z-index:10}
-        .pp .dot{width:30px;height:30px;background:var(--am);color:var(--az);border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:800;border:2px solid var(--az);box-shadow:0 2px 4px rgba(0,0,0,.35)}
-        .pp .name{color:#fff;font-size:.72rem;margin-top:3px;background:rgba(0,0,0,.55);padding:2px 5px;border-radius:4px;white-space:nowrap;font-weight:600}
+
 
         /* ── Squad ── */
         .squad-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px}
@@ -243,7 +233,7 @@
         @media(max-width:480px){
             .container{padding:0 8px;gap:12px;width:100%}
             .admin-dash{grid-template-columns:1fr 1fr}
-            .pitch-container{height:300px}
+            
             .count-box{min-width:50px;padding:7px 3px}
             .count-box span{font-size:1.15rem}
             .count-box small{font-size:.6rem}
@@ -347,8 +337,9 @@
 
     <!-- Classificação do grupo -->
     <div class="card card-full">
-        <div class="card-title">📊 Classificação do Grupo</div>
-        <div class="table-scroll">
+        <div class="card-title">📊 <span id="grupo-titulo">Classificação do Grupo</span></div>
+        <div id="grupo-loading" style="text-align:center;padding:10px;color:var(--ts);font-size:.9rem">Carregando...</div>
+        <div class="table-scroll" id="grupo-table-wrap" style="display:none">
             <table>
                 <thead><tr><th>#</th><th>País</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Pts</th></tr></thead>
                 <tbody id="grupo-tbody"></tbody>
@@ -362,13 +353,7 @@
         <div id="jogos-realizados-content"></div>
     </div>
 
-    <!-- Escalação -->
-    <div class="card">
-        <div class="card-title">🏟️ Escalação Provável</div>
-        <div class="pitch-container" id="pitch">
-            <div class="pa-top"></div><div class="pa-bot"></div>
-        </div>
-    </div>
+
 
     <!-- Elenco -->
     <div class="card card-full">
@@ -651,19 +636,6 @@ const dataCopa = {
         {num:18,nome:'Evanilson',pos:'Centroavante',clube:'Porto',setor:'att'},
         {num:26,nome:'Ivan',pos:'Goleiro',clube:'Zenit',setor:'gk'}
     ],
-    escalacao:[
-        {num:1,nome:'Alisson',top:'88%',left:'50%'},
-        {num:2,nome:'Danilo',top:'72%',left:'82%'},
-        {num:4,nome:'Marquinhos',top:'75%',left:'64%'},
-        {num:3,nome:'Gabriel',top:'75%',left:'36%'},
-        {num:6,nome:'Wendell',top:'72%',left:'18%'},
-        {num:8,nome:'B. Guim.',top:'55%',left:'65%'},
-        {num:15,nome:'J. Gomes',top:'55%',left:'35%'},
-        {num:10,nome:'Paquetá',top:'36%',left:'50%'},
-        {num:22,nome:'Raphinha',top:'28%',left:'82%'},
-        {num:7,nome:'Vini Jr',top:'28%',left:'18%'},
-        {num:11,nome:'Rodrygo',top:'14%',left:'50%'}
-    ]
 };
 
 /* ── Utilitários ─────────────────────────────────────────────────────────── */
@@ -764,14 +736,19 @@ function processarDadosCopa(data){
     if(passados.length>0){
         dataCopa.jogos=passados.slice(0,5).map(m=>{
             const isBr=(m.homeTeam?.name||'').toLowerCase().includes('braz')||(m.homeTeam?.name||'').toLowerCase().includes('bras');
-            const adv=isBr?(m.awayTeam?.shortName||m.awayTeam?.name):(m.homeTeam?.shortName||m.homeTeam?.name);
+            const adv=traduzirTime(isBr?(m.awayTeam?.shortName||m.awayTeam?.name):(m.homeTeam?.shortName||m.homeTeam?.name));
             const gpBr=isBr?m.score?.fullTime?.home:m.score?.fullTime?.away;
             const gcBr=isBr?m.score?.fullTime?.away:m.score?.fullTime?.home;
             const d=new Date(m.utcDate).toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'numeric'});
             return{data:d,adv,placar:`${gpBr??'?'}-${gcBr??'?'}`,info:traduzirFase(m.stage)};
         });
     }
+    // Determina fase atual do Brasil
+    const faseAtual=brMatches.length>0?(brMatches[brMatches.length-1]?.stage||'GROUP_STAGE'):'GROUP_STAGE';
+    dataCopa.faseAtual=faseAtual;
     renderAllData();
+    // Busca standings separadamente
+    carregarStandings(faseAtual);
 }
 
 /* ── Render ─────────────────────────────────────────────────────────────── */
@@ -779,7 +756,6 @@ function renderAllData(){
     renderProximoJogo();
     renderGrupoC();
     renderJogosRealizados();
-    renderPitch();
     renderSquad();
     iniciarCountdown();
 }
@@ -826,17 +802,134 @@ function renderProximoJogo(){
 }
 
 function renderGrupoC(){
+    // Renderiza com dados de fallback (substituto até API carregar)
     const t=document.getElementById('grupo-tbody');
-    t.innerHTML=dataCopa.grupoC.map((s,i)=>`<tr class="${s.selecao==='Brasil'?'highlight-row':''}">
-        <td>${i+1}</td>
-        <td style="text-align:left;display:flex;align-items:center;gap:7px">
-            <img src="https://flagcdn.com/h20/${s.iso}.png" alt="${esc(s.selecao)}" style="height:20px;border-radius:2px;object-fit:contain" onerror="this.style.display='none'">
-            ${esc(s.selecao)}
-        </td>
-        <td>${s.j}</td><td>${s.v}</td><td>${s.e}</td><td>${s.d}</td>
-        <td>${s.gp}</td><td>${s.gc}</td><td>${s.gp-s.gc>=0?'+':''}${s.gp-s.gc}</td>
-        <td><strong>${s.pts}</strong></td>
-    </tr>`).join('');
+    if(!dataCopa.grupoC.length)return;
+    document.getElementById('grupo-loading').style.display='none';
+    document.getElementById('grupo-table-wrap').style.display='block';
+    t.innerHTML=dataCopa.grupoC.map((s,i)=>{
+        const isBr=s.selecao==='Brasil'||s.isBrasil;
+        const sg=s.gp-s.gc;
+        return `<tr class="${isBr?'highlight-row':''}">
+            <td>${i+1}</td>
+            <td style="text-align:left">
+                <div style="display:flex;align-items:center;gap:6px">
+                    ${s.iso?`<img src="https://flagcdn.com/h20/${s.iso}.png" alt="${esc(s.selecao)}" style="height:18px;border-radius:2px;object-fit:contain" loading="lazy" onerror="this.style.display='none'">`:''}
+                    ${esc(s.selecao)}${isBr?' 🇧🇷':''}
+                </div>
+            </td>
+            <td>${s.j}</td><td>${s.v}</td><td>${s.e}</td><td>${s.d}</td>
+            <td>${s.gp}</td><td>${s.gc}</td>
+            <td>${sg>=0?'+':''}${sg}</td>
+            <td><strong>${s.pts}</strong></td>
+        </tr>`;
+    }).join('');
+}
+
+async function carregarStandings(faseAtual){
+    // Fases eliminatórias não têm classificação de grupo
+    const fasesElim=['ROUND_OF_16','QUARTER_FINALS','SEMI_FINALS','THIRD_PLACE','FINAL'];
+    const el=document.getElementById('grupo-titulo');
+    const loading=document.getElementById('grupo-loading');
+    const wrap=document.getElementById('grupo-table-wrap');
+
+    if(fasesElim.includes(faseAtual)){
+        // Brasil em fase eliminatória — exibe chaveamento simples
+        if(el)el.textContent='Fase Eliminatória';
+        if(loading){loading.style.display='block';loading.textContent='Brasil nas fases eliminatórias — classificação por grupo encerrada.';}
+        if(wrap)wrap.style.display='none';
+        return;
+    }
+
+    try{
+        const res=await fetch(`${PROXY_BASE}/api/standings`,{cache:'no-store'});
+        if(!res.ok)throw new Error('HTTP '+res.status);
+        const data=await res.json();
+        const standings=data.standings||[];
+
+        // Encontrar o grupo onde está o Brasil
+        let grupoDosBrasil=null;
+        let nomeGrupo='';
+        for(const s of standings){
+            if(s.type==='TOTAL'||s.type==='HOME'){
+                const table=s.table||[];
+                const temBr=table.some(r=>(r.team?.name||'').toLowerCase().includes('braz')||(r.team?.name||'').toLowerCase().includes('bras'));
+                if(temBr){grupoDosBrasil=table;nomeGrupo=s.group||s.stage||'';break;}
+            }
+        }
+        // Fallback: procura em qualquer tipo
+        if(!grupoDosBrasil){
+            for(const s of standings){
+                const table=s.table||[];
+                const temBr=table.some(r=>(r.team?.name||'').toLowerCase().includes('braz')||(r.team?.name||'').toLowerCase().includes('bras'));
+                if(temBr){grupoDosBrasil=table;nomeGrupo=s.group||s.stage||'';break;}
+            }
+        }
+
+        if(!grupoDosBrasil||!grupoDosBrasil.length){
+            if(loading){loading.style.display='block';loading.textContent='Classificação ainda não disponível.';}
+            return;
+        }
+
+        // Atualiza título
+        const labelGrupo=nomeGrupo?nomeGrupo.replace('GROUP_','Grupo '):'Grupo';
+        if(el)el.textContent=`Classificação — ${labelGrupo}`;
+
+        // Mapeia para o formato interno
+        dataCopa.grupoC=grupoDosBrasil.map(r=>{
+            const nome=r.team?.name||'';
+            const isBr=nome.toLowerCase().includes('braz')||nome.toLowerCase().includes('bras');
+            const nomePT=isBr?'Brasil':traduzirTime(r.team?.shortName||nome);
+            const iso=isBr?'br':getFlagIso(r.team?.shortName||nome,r.team?.tla||'');
+            return{
+                selecao:nomePT,
+                isBrasil:isBr,
+                pts:r.points||0,
+                j:r.playedGames||0,
+                v:r.won||0,
+                e:r.draw||0,
+                d:r.lost||0,
+                gp:r.goalsFor||0,
+                gc:r.goalsAgainst||0,
+                iso,
+                crest:r.team?.crest||null
+            };
+        });
+
+        renderGrupoC();
+        console.log('[Standings] Grupo carregado:',labelGrupo,grupoDosBrasil.length,'times');
+    }catch(e){
+        console.warn('[Standings] Erro:',e.message);
+        // Mantém dados de fallback já renderizados
+        document.getElementById('grupo-loading').style.display='none';
+        document.getElementById('grupo-table-wrap').style.display='block';
+    }
+}
+
+function getFlagIso(shortName,tla){
+    const m={
+        'BRA':'br','SCO':'gb-sct','MAR':'ma','HAI':'ht','GER':'de','FRA':'fr','ESP':'es',
+        'ENG':'gb-eng','POR':'pt','ARG':'ar','URU':'uy','COL':'co','MEX':'mx','USA':'us',
+        'CAN':'ca','JPN':'jp','KOR':'kr','AUS':'au','IRN':'ir','KSA':'sa','QAT':'qa',
+        'SEN':'sn','CMR':'cm','GHA':'gh','NGA':'ng','TUN':'tn','EGY':'eg','MAL':'ml',
+        'CRO':'hr','SRB':'rs','DEN':'dk','POL':'pl','SUI':'ch','NED':'nl','BEL':'be',
+        'ITA':'it','TUR':'tr','GRE':'gr','UKR':'ua','CZE':'cz','SVK':'sk','SVN':'si',
+        'ALB':'al','GEO':'ge','PAR':'py','BOL':'bo','CHI':'cl','PER':'pe','VEN':'ve',
+        'HON':'hn','SLV':'sv','CRC':'cr','PAN':'pa','JAM':'jm','NZL':'nz','IDN':'id',
+        'UZB':'uz','IRQ':'iq','JOR':'jo','WAL':'gb-wls','NIR':'gb-nir','IRL':'ie',
+        'ROU':'ro','HUN':'hu','BUL':'bg','MKD':'mk','BIH':'ba','RSA':'za','CIV':'ci',
+    };
+    if(m[tla])return m[tla];
+    // Tenta pelo shortName
+    const found=Object.entries(TIMES_PT).find(([en])=>
+        (shortName||'').toLowerCase()===en.toLowerCase());
+    if(found){
+        const ptName=found[1];
+        const iso2=Object.entries(FLAG_MAP).find(([k])=>
+            ptName.toLowerCase().includes(k)||k.includes(ptName.toLowerCase()));
+        if(iso2)return FLAG_MAP[iso2[0]];
+    }
+    return '';
 }
 
 function renderJogosRealizados(){
@@ -848,16 +941,7 @@ function renderJogosRealizados(){
     </div>`).join('');
 }
 
-function renderPitch(){
-    const c=document.getElementById('pitch');
-    c.querySelectorAll('.pp').forEach(e=>e.remove());
-    dataCopa.escalacao.forEach(p=>{
-        const d=document.createElement('div');
-        d.className='pp';d.style.top=p.top;d.style.left=p.left;
-        d.innerHTML=`<div class="dot">${p.num}</div><div class="name">${esc(p.nome)}</div>`;
-        c.appendChild(d);
-    });
-}
+
 
 function renderSquad(){
     const g=document.getElementById('squad-grid');
@@ -1572,7 +1656,7 @@ function initApp(){
     document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id)}));
     document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.active').forEach(m=>closeModal(m.id))});
     renderAllData();
-    setTimeout(()=>{fetchLiveDadosCopa(true);carregarProximaPartidaParaBolao();},200);
+    setTimeout(()=>{fetchLiveDadosCopa(true);carregarProximaPartidaParaBolao();carregarStandings(dataCopa.faseAtual||'GROUP_STAGE');},200);
 }
 document.addEventListener('DOMContentLoaded',initApp);
 </script>
