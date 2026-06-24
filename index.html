@@ -322,7 +322,22 @@
         <div class="card-title">🎯 Bolão dos Amigos</div>
         <p id="bolao-jogo-info" style="text-align:center;color:var(--ts)">Próxima partida do Brasil</p>
         <div style="margin-top:13px;font-size:1.15rem;font-weight:700;color:var(--gr);text-align:center">R$ 5,00 por palpite</div>
-        <div id="bolao-btn-wrap" style="margin:18px auto 0;max-width:300px">
+
+        <!-- Quadro público de arrecadação -->
+        <div id="quadro-publico" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0;max-width:500px;margin-left:auto;margin-right:auto">
+            <div style="background:linear-gradient(135deg,var(--gr),var(--grd));border-radius:12px;padding:18px;text-align:center;color:#fff">
+                <div id="pub-pago" style="font-size:1.6rem;font-weight:800;color:#fff">R$ 0,00</div>
+                <div style="font-size:.75rem;margin-top:4px;opacity:.85;text-transform:uppercase;letter-spacing:.5px">💰 Total Arrecadado</div>
+                <div style="font-size:.68rem;margin-top:3px;opacity:.7">(apostas pagas e validadas)</div>
+            </div>
+            <div style="background:linear-gradient(135deg,var(--az),var(--azd));border-radius:12px;padding:18px;text-align:center;color:#fff">
+                <div id="pub-premio" style="font-size:1.6rem;font-weight:800;color:var(--am)">R$ 0,00</div>
+                <div style="font-size:.75rem;margin-top:4px;opacity:.85;text-transform:uppercase;letter-spacing:.5px">🏆 Prêmio Líquido</div>
+                <div style="font-size:.68rem;margin-top:3px;opacity:.7">(após taxa de 10%)</div>
+            </div>
+        </div>
+
+        <div id="bolao-btn-wrap" style="margin:0 auto;max-width:300px">
             <button class="btn-modern btn-primary btn-block" id="btn-bolao" type="button">🎯 Fazer Meu Palpite</button>
         </div>
         <div id="encerrado-card" style="display:none;margin-top:18px" class="encerrado-aviso">
@@ -376,6 +391,7 @@
                 <span>💰 Arrecadado: <strong id="bstat-arrec">—</strong></span>
                 <span>🏆 Prêmio: <strong id="bstat-premio">—</strong></span>
             </div>
+            <p style="font-size:.7rem;opacity:.65;margin-top:6px">* valores referentes a apostas pagas e validadas</p>
         </div>
         <input type="text" id="bolao-nome" placeholder="Nome Completo *" autocomplete="name">
         <input type="tel" id="bolao-contato" placeholder="Telefone com DDD * — (63) 98416-7994" autocomplete="tel">
@@ -924,10 +940,15 @@ async function carregarStatsBolao(jogoId){
         const res=await fetch(`${PROXY_BASE}/api/stats-jogo/${jogoId}`);
         if(!res.ok)return;
         const s=await res.json();
+        // Banner do modal (apostas pagas)
         const ep=document.getElementById('bstat-part'),ea=document.getElementById('bstat-arrec'),epr=document.getElementById('bstat-premio');
         if(ep)ep.textContent=s.total_participantes;
         if(ea)ea.textContent=fmtBRL(s.arrecadacao_bruta);
         if(epr)epr.textContent=fmtBRL(s.premiacao_liquida);
+        // Quadro público na página inicial (apostas pagas)
+        const pp=document.getElementById('pub-pago'),ppr=document.getElementById('pub-premio');
+        if(pp)pp.textContent=fmtBRL(s.arrecadacao_bruta);
+        if(ppr)ppr.textContent=fmtBRL(s.premiacao_liquida);
     }catch(e){console.warn('[Stats] Erro:',e);}
 }
 
