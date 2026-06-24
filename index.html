@@ -712,7 +712,10 @@
             </div>
         </div>
 
-        <div id="bolao-btn-wrap" style="margin:0 auto;max-width:300px">
+        <div style="margin:10px 14px 4px;padding:10px 14px;background:var(--orange-lt);border:1px solid #ffcc80;border-left:4px solid var(--orange);border-radius:var(--r-sm);font-size:.78rem;color:var(--text-2);line-height:1.5">
+            ⚠️ Se nenhum participante acertar o placar exato, o valor será devolvido via PIX informado no cadastro, com desconto da taxa administrativa de 10%.
+        </div>
+        <div id="bolao-btn-wrap" style="margin:14px auto 0;max-width:300px">
             <button class="btn-modern btn-primary btn-block" id="btn-bolao" type="button">🎯 Fazer Meu Palpite</button>
         </div>
         <div id="encerrado-card" style="display:none;margin-top:18px" class="encerrado-aviso">
@@ -762,6 +765,9 @@
                 <span>🏆 Prêmio: <strong id="bstat-premio">—</strong></span>
             </div>
             <p style="font-size:.7rem;opacity:.65;margin-top:6px">* valores referentes a apostas pagas e validadas</p>
+            <p style="font-size:.7rem;margin-top:5px;padding:7px 10px;background:rgba(255,255,255,.08);border-left:3px solid var(--yellow);border-radius:3px;color:rgba(255,255,255,.75);line-height:1.5">
+                ⚠️ Se nenhum participante acertar o placar exato, o valor será devolvido via PIX informado, descontando a taxa de 10%.
+            </p>
         </div>
         <input type="text" id="bolao-nome" placeholder="Nome Completo *" autocomplete="name">
         <input type="tel" id="bolao-contato" placeholder="Telefone com DDD * — (63) 98416-7994" autocomplete="tel">
@@ -1610,6 +1616,9 @@ function mostrarComprovante(dados){
                 <img src="${esc(qrUrl)}" alt="QR Code PIX" onerror="this.style.display='none'">
                 <p style="margin-top:7px;font-size:.83rem"><strong>${esc(PIX_NOME)}</strong></p>
                 <p style="font-size:.78rem;color:var(--text-3)">${esc(PIX_CHAVE)}</p>
+                <div style="margin:10px 0;padding:9px 12px;background:#fff8e1;border:1px solid #ffe082;border-left:4px solid #f9a825;border-radius:6px;font-size:.76rem;color:#6d4c00;line-height:1.5">
+                    &#9888;&#65039; Se nenhum participante acertar o placar exato, o valor ser&aacute; devolvido via PIX informado no cadastro, descontando a taxa administrativa de 10%.
+                </div>
                 <div class="pix-chave-box">
                     <input type="text" id="pix-brcode" value="${esc(brCode)}" readonly>
                     <button class="btn-modern btn-warning btn-sm" id="btn-copiar-pix">📋 Copiar</button>
