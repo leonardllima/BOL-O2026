@@ -609,16 +609,30 @@
     .adm-table td.td-center, .adm-table th.th-center { text-align: center; }
     .adm-table td { vertical-align: middle; }
 
-    /* Ações sempre à direita */
+    /* Ações — coluna larga o suficiente, sem quebra */
     .adm-table td:last-child { text-align: right; white-space: nowrap; }
     .adm-table th:last-child { text-align: right; }
 
-    /* Coluna de ações com botões em linha */
-    .action-btns { display: inline-flex; gap: 4px; align-items: center; justify-content: flex-end; flex-wrap: nowrap; }
+    /* Botões de ação em linha */
+    .action-btns {
+        display: inline-flex;
+        gap: 4px;
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: nowrap;
+    }
+    .action-btns .btn-modern {
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
 
-    /* Mobile: botões menores */
+    /* Tabela de apostas: coluna ações com largura mínima */
+    #admin-apostas-tbody td:last-child,
+    #financeiro-tbody td:last-child { min-width: 280px; }
+
+    /* Mobile: botões menores mas ainda em linha */
     @media(max-width:600px) {
-        .btn-modern.btn-sm { padding: 5px 8px; font-size: .75rem; }
+        .btn-modern.btn-sm { padding: 5px 8px; font-size: .73rem; }
         .action-btns { flex-wrap: wrap; }
         button[title]:hover::after { display: none; }
     }
@@ -1655,13 +1669,13 @@ async function carregarDashboard(){
 
 async function carregarJogos(){
     const el=document.getElementById('admin-jogos-list');
-    el.innerHTML='<div class="admin-loading">Carregando jogos...</div>';
+    el.innerHTML='<div class="loading">Carregando jogos...</div>';
     try{
         const res=await adminFetch('/api/admin/jogos');
         const {jogos}=await res.json();
-        if(!jogos.length){el.innerHTML='<div class="admin-empty">Nenhum jogo cadastrado.</div>';return}
+        if(!jogos.length){el.innerHTML='<div class="empty">Nenhum jogo cadastrado.</div>';return}
         el.innerHTML=jogos.map(j=>`
-            <div class="jogo-card-admin" onclick="verDetalheJogo('${esc(j.id)}')">
+            <div class="jogo-card-adm" onclick="verDetalheJogo('${esc(j.id)}')">
                 <h4>🇧🇷 Brasil × ${esc(j.adversario)} <small style="font-weight:400;color:var(--text-3)">— ${esc(j.fase)}</small></h4>
                 <p style="font-size:.83rem;color:var(--text-3);margin-bottom:8px">${fmtDateOnly(j.data_jogo)} — ${esc(j.competicao)}</p>
                 <div class="jogo-stats">
@@ -1672,12 +1686,12 @@ async function carregarJogos(){
                     <span>🏆 Prêmio: <strong>${fmtBRL(j.premiacao_liquida)}</strong></span>
                 </div>
             </div>`).join('');
-    }catch(e){el.innerHTML=`<div class="admin-empty">Erro: ${esc(e.message)}</div>`}
+    }catch(e){el.innerHTML=`<div class="empty">Erro: ${esc(e.message)}</div>`}
 }
 
 async function verDetalheJogo(jogoId){
     const body=document.getElementById('jogo-detalhe-body');
-    body.innerHTML='<div class="admin-loading">Carregando detalhes...</div>';
+    body.innerHTML='<div class="loading">Carregando detalhes...</div>';
     openModal('modal-jogo-detalhe');
     try{
         const res=await adminFetch(`/api/admin/jogos/${jogoId}`);
@@ -1686,12 +1700,12 @@ async function verDetalheJogo(jogoId){
             <h2>⚽ Brasil × ${esc(jogo.adversario)}</h2>
             <p style="color:var(--text-3);margin-bottom:15px">${esc(jogo.competicao)} — ${esc(jogo.fase)} — ${fmtDateOnly(jogo.data_jogo)}</p>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px">
-                <div class="admin-stat-card"><div class="stat-value">${financeiro.total_apostas}</div><div class="stat-label">Apostas</div></div>
-                <div class="admin-stat-card stat-yellow"><div class="stat-value">${fmtBRL(financeiro.arrecadacao_bruta)}</div><div class="stat-label">Arrecadação Bruta</div></div>
-                <div class="admin-stat-card stat-red"><div class="stat-value">${fmtBRL(financeiro.taxa_administrativa)}</div><div class="stat-label">Taxa (10%)</div></div>
-                <div class="admin-stat-card stat-blue"><div class="stat-value">${fmtBRL(financeiro.premiacao_liquida)}</div><div class="stat-label">Premiação</div></div>
-                <div class="admin-stat-card"><div class="stat-value">${fmtBRL(financeiro.total_pago)}</div><div class="stat-label">✅ Pago</div></div>
-                <div class="admin-stat-card stat-red"><div class="stat-value">${fmtBRL(financeiro.total_pendente)}</div><div class="stat-label">⏳ Pendente</div></div>
+                <div class="stat-card"><div class="sv">${financeiro.total_apostas}</div><div class="sl">Apostas</div></div>
+                <div class="stat-card sy"><div class="sv">${fmtBRL(financeiro.arrecadacao_bruta)}</div><div class="sl">Arrecadação Bruta</div></div>
+                <div class="stat-card sr"><div class="sv">${fmtBRL(financeiro.taxa_administrativa)}</div><div class="sl">Taxa (10%)</div></div>
+                <div class="stat-card sb"><div class="sv">${fmtBRL(financeiro.premiacao_liquida)}</div><div class="sl">Premiação</div></div>
+                <div class="stat-card"><div class="sv">${fmtBRL(financeiro.total_pago)}</div><div class="sl">✅ Pago</div></div>
+                <div class="stat-card sr"><div class="sv">${fmtBRL(financeiro.total_pendente)}</div><div class="sl">⏳ Pendente</div></div>
             </div>
             <h3 style="margin-bottom:10px">🏆 Placares Mais Apostados</h3>
             <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px">
@@ -1719,7 +1733,7 @@ async function verDetalheJogo(jogoId){
                 </table>
             </div>
         `;
-    }catch(e){body.innerHTML=`<div class="admin-empty">Erro: ${esc(e.message)}</div>`}
+    }catch(e){body.innerHTML=`<div class="empty">Erro: ${esc(e.message)}</div>`}
 }
 
 /* Apostas */
@@ -1776,7 +1790,7 @@ async function abrirGanhadores(jogoId){
 
 async function carregarApostas(){
     const tbody=document.getElementById('admin-apostas-tbody');
-    tbody.innerHTML='<tr><td colspan="7" class="admin-loading">Carregando...</td></tr>';
+    tbody.innerHTML='<tr><td colspan="7" class="loading">Carregando...</td></tr>';
     try{
         const search=document.getElementById('filtro-aposta-search').value;
         const jogoId=document.getElementById('filtro-aposta-jogo').value;
@@ -1787,7 +1801,7 @@ async function carregarApostas(){
         if(status)url+=`&status=${encodeURIComponent(status)}`;
         const res=await adminFetch(url);
         const {apostas,total,total_pages}=await res.json();
-        if(!apostas.length){tbody.innerHTML='<tr><td colspan="7" class="admin-empty">Nenhuma aposta encontrada.</td></tr>';document.getElementById('apostas-pagination').innerHTML='';return}
+        if(!apostas.length){tbody.innerHTML='<tr><td colspan="7" class="empty">Nenhuma aposta encontrada.</td></tr>';document.getElementById('apostas-pagination').innerHTML='';return}
         tbody.innerHTML=apostas.map(a=>`
             <tr>
                 <td><strong>${esc(a.nome)}</strong></td>
@@ -1812,13 +1826,13 @@ async function carregarApostas(){
         const info=document.createElement('span');info.textContent=`Pág ${apostasPage}/${total_pages||1} (${total} apostas)`;info.style.fontSize='.82rem';info.style.color='var(--text-3)';pag.appendChild(info);
         const btnNext=document.createElement('button');btnNext.textContent='›';btnNext.disabled=apostasPage>=(total_pages||1);
         btnNext.onclick=()=>{apostasPage++;carregarApostas()};pag.appendChild(btnNext);
-    }catch(e){tbody.innerHTML=`<tr><td colspan="7" class="admin-empty">Erro: ${esc(e.message)}</td></tr>`}
+    }catch(e){tbody.innerHTML=`<tr><td colspan="7" class="empty">Erro: ${esc(e.message)}</td></tr>`}
 }
 
 /* Participantes */
 async function carregarParticipantes(){
     const tbody=document.getElementById('admin-participantes-tbody');
-    tbody.innerHTML='<tr><td colspan="8" class="admin-loading">Carregando...</td></tr>';
+    tbody.innerHTML='<tr><td colspan="8" class="loading">Carregando...</td></tr>';
     try{
         const search=document.getElementById('filtro-participante').value;
         const data=document.getElementById('filtro-data-participante').value;
@@ -1827,7 +1841,7 @@ async function carregarParticipantes(){
         if(data)url+=`data=${encodeURIComponent(data)}&`;
         const res=await adminFetch(url);
         const {participantes}=await res.json();
-        if(!participantes.length){tbody.innerHTML='<tr><td colspan="8" class="admin-empty">Nenhum participante.</td></tr>';return}
+        if(!participantes.length){tbody.innerHTML='<tr><td colspan="8" class="empty">Nenhum participante.</td></tr>';return}
         tbody.innerHTML=participantes.map(p=>`<tr>
             <td><strong>${esc(p.nome)}</strong></td>
             <td>${esc(p.contato)}</td>
@@ -1837,13 +1851,13 @@ async function carregarParticipantes(){
             <td style="font-size:.78rem">${fmtDate(p.data_cadastro)}</td>
             <td><button class="btn-modern btn-sm btn-danger" onclick="excluirParticipante('${esc(p.id)}')" title="Excluir participante">🗑</button></td>
         </tr>`).join('');
-    }catch(e){tbody.innerHTML=`<tr><td colspan="8" class="admin-empty">Erro: ${esc(e.message)}</td></tr>`}
+    }catch(e){tbody.innerHTML=`<tr><td colspan="8" class="empty">Erro: ${esc(e.message)}</td></tr>`}
 }
 
 /* Palpites */
 async function carregarPalpites(){
     const tbody=document.getElementById('admin-palpites-tbody');
-    tbody.innerHTML='<tr><td colspan="7" class="admin-loading">Carregando...</td></tr>';
+    tbody.innerHTML='<tr><td colspan="7" class="loading">Carregando...</td></tr>';
     try{
         const search=document.getElementById('filtro-palpite').value;
         const jogoId=document.getElementById('filtro-palpite-jogo').value;
@@ -1854,7 +1868,7 @@ async function carregarPalpites(){
         if(data)url+=`data=${encodeURIComponent(data)}&`;
         const res=await adminFetch(url);
         const {palpites}=await res.json();
-        if(!palpites.length){tbody.innerHTML='<tr><td colspan="7" class="admin-empty">Nenhum palpite.</td></tr>';return}
+        if(!palpites.length){tbody.innerHTML='<tr><td colspan="7" class="empty">Nenhum palpite.</td></tr>';return}
         tbody.innerHTML=palpites.map(p=>`<tr>
             <td><strong>${esc(p.participante_nome)}</strong></td>
             <td>${esc(p.participante_contato)}</td>
@@ -1864,15 +1878,15 @@ async function carregarPalpites(){
             <td style="font-size:.78rem">${fmtDate(p.data_palpite)}</td>
             <td><button class="btn-modern btn-sm btn-danger" onclick="excluirPalpite('${esc(p.id)}')" title="Excluir palpite">🗑</button></td>
         </tr>`).join('');
-    }catch(e){tbody.innerHTML=`<tr><td colspan="7" class="admin-empty">Erro: ${esc(e.message)}</td></tr>`}
+    }catch(e){tbody.innerHTML=`<tr><td colspan="7" class="empty">Erro: ${esc(e.message)}</td></tr>`}
 }
 
 /* Financeiro */
 async function carregarFinanceiro(){
     const cards=document.getElementById('financeiro-cards');
     const tbody=document.getElementById('financeiro-tbody');
-    cards.innerHTML='<div class="admin-loading">Carregando...</div>';
-    tbody.innerHTML='<tr><td colspan="7" class="admin-loading">Carregando...</td></tr>';
+    cards.innerHTML='<div class="loading">Carregando...</div>';
+    tbody.innerHTML='<tr><td colspan="7" class="loading">Carregando...</td></tr>';
     try{
         const jogoId=document.getElementById('filtro-fin-jogo').value;
         const status=document.getElementById('filtro-fin-status').value;
@@ -1904,7 +1918,7 @@ async function carregarFinanceiro(){
                     :`<button class="btn-modern btn-sm btn-warning" onclick="validarPagamento('${esc(a.id)}','PENDENTE')">↩️ Reverter</button>`}
             </td>
         </tr>`).join('');
-    }catch(e){cards.innerHTML=`<div class="admin-empty">Erro: ${esc(e.message)}</div>`}
+    }catch(e){cards.innerHTML=`<div class="empty">Erro: ${esc(e.message)}</div>`}
 }
 
 /* Carregar jogos para filtros */
@@ -1967,7 +1981,7 @@ async function excluirPalpite(id){
 
 async function abrirVoucher(apostaId){
     const body=document.getElementById('voucher-body');
-    body.innerHTML='<div class="admin-loading">Gerando voucher...</div>';
+    body.innerHTML='<div class="loading">Gerando voucher...</div>';
     openModal('modal-voucher');
     try{
         const res=await adminFetch(`/api/admin/voucher/${apostaId}`);
@@ -2002,7 +2016,7 @@ async function abrirVoucher(apostaId){
             w.document.write(`<html><head><title>Voucher Bolão Copa 2026</title><style>body{font-family:sans-serif;padding:20px}.voucher-box{border:2px solid #ffdf00;border-radius:8px;padding:20px}.voucher-item{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #ddd}hr{border-color:#ddd;margin:8px 0}</style></head><body>${c}</body></html>`);
             w.document.close();setTimeout(()=>w.print(),400);
         };
-    }catch(e){body.innerHTML=`<div class="admin-empty">Erro: ${esc(e.message)}</div>`}
+    }catch(e){body.innerHTML=`<div class="empty">Erro: ${esc(e.message)}</div>`}
 }
 
 async function exportarDados(tipo,jogoId){
