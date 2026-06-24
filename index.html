@@ -526,7 +526,7 @@
     .voucher-item span:last-child { font-weight:700; }
 
     /* Squad */
-    .squad-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; }
+    .squad-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
     .squad-section h3 { font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-3); margin-bottom:12px; padding-bottom:6px; border-bottom:2px solid var(--green); }
     .player-card { display:flex; align-items:center; gap:12px; padding:10px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r-sm); margin-bottom:6px; }
     .player-number { background:var(--blue); color:var(--yellow); width:32px; height:32px; min-width:32px; display:flex; align-items:center; justify-content:center; border-radius:var(--r-sm); font-weight:800; font-size:.88rem; }
@@ -540,6 +540,15 @@
     /* ── RESPONSIVO ───────────────────────────────────────── */
     @media(max-width:768px){
         *{ box-sizing:border-box; }
+        /* Jogos realizados */
+        #jogos-realizados-content table { font-size:.78rem; }
+        #jogos-realizados-content th, #jogos-realizados-content td { padding:7px 4px; }
+        /* Squad */
+        .squad-grid { grid-template-columns:1fr !important; gap:10px; }
+        .player-card { padding:8px 10px; }
+        .player-number { width:28px; height:28px; min-width:28px; font-size:.8rem; }
+        .player-info strong { font-size:.85rem; }
+        .player-info small { font-size:.72rem; }
         header { position: relative; }
         .header-top { padding:10px 14px; gap:8px; }
         .header-brand h1 { font-size:1rem; }
@@ -570,6 +579,11 @@
     }
     @media(max-width:480px){
         .container { padding:0 8px; gap:10px; }
+        /* Jogos realizados em mobile pequeno: empilhar */
+        #jogos-realizados-content .jr-data { display:block; color:var(--text-3); font-size:.72rem; }
+        #jogos-realizados-content .jr-fase { display:none; }
+        /* Squad em coluna única */
+        .squad-grid { grid-template-columns:1fr !important; }
         .admin-dash { grid-template-columns:1fr 1fr; }
         .fin-grid { grid-template-columns:1fr; }
         .admin-tabs { overflow-x:auto; }
@@ -1051,32 +1065,32 @@ const dataCopa = {
         {data:'19/06/2026',adv:'Haiti',placar:'3-0',info:'Fase de Grupos'}
     ],
     elenco:[
-        {num:1,nome:'Alisson',pos:'Goleiro',clube:'Liverpool',setor:'gk'},
-        {num:23,nome:'Ederson',pos:'Goleiro',clube:'Man City',setor:'gk'},
-        {num:12,nome:'Bento',pos:'Goleiro',clube:'Al-Nassr',setor:'gk'},
-        {num:4,nome:'Marquinhos',pos:'Zagueiro',clube:'PSG',setor:'def'},
-        {num:3,nome:'Gabriel M.',pos:'Zagueiro',clube:'Arsenal',setor:'def'},
-        {num:14,nome:'Militão',pos:'Zagueiro',clube:'Real Madrid',setor:'def'},
-        {num:2,nome:'Danilo',pos:'Lateral-Dir',clube:'Juventus',setor:'def'},
-        {num:6,nome:'Wendell',pos:'Lateral-Esq',clube:'Porto',setor:'def'},
-        {num:24,nome:'Ayrton L.',pos:'Lateral',clube:'Inter Miami',setor:'def'},
-        {num:25,nome:'Carlos A.',pos:'Lateral',clube:'Ajax',setor:'def'},
-        {num:5,nome:'Casemiro',pos:'Volante',clube:'Man Utd',setor:'mid'},
-        {num:8,nome:'B. Guimarães',pos:'Volante',clube:'Newcastle',setor:'mid'},
-        {num:15,nome:'João Gomes',pos:'Volante',clube:'Wolves',setor:'mid'},
-        {num:10,nome:'Paquetá',pos:'Meia',clube:'West Ham',setor:'mid'},
-        {num:20,nome:'Andreas P.',pos:'Meia',clube:'Atlético-MG',setor:'mid'},
-        {num:13,nome:'Artur',pos:'Meia',clube:'Leipzig',setor:'mid'},
-        {num:16,nome:'Gerson',pos:'Meia',clube:'Flamengo',setor:'mid'},
-        {num:7,nome:'Vini Jr',pos:'Atacante',clube:'Real Madrid',setor:'att'},
-        {num:11,nome:'Rodrygo',pos:'Atacante',clube:'Real Madrid',setor:'att'},
-        {num:22,nome:'Raphinha',pos:'Atacante',clube:'Barcelona',setor:'att'},
-        {num:17,nome:'Savinho',pos:'Atacante',clube:'Man City',setor:'att'},
-        {num:9,nome:'Endrick',pos:'Atacante',clube:'Real Madrid',setor:'att'},
-        {num:19,nome:'Gabigol',pos:'Atacante',clube:'Flamengo',setor:'att'},
-        {num:21,nome:'Pedro',pos:'Centroavante',clube:'Flamengo',setor:'att'},
-        {num:18,nome:'Evanilson',pos:'Centroavante',clube:'Porto',setor:'att'},
-        {num:26,nome:'Ivan',pos:'Goleiro',clube:'Zenit',setor:'gk'}
+        {num:1, nome:'Alisson',          pos:'Goleiro',     clube:'Liverpool',          setor:'gk'},
+        {num:23,nome:'Ederson',          pos:'Goleiro',     clube:'Fenerbahçe',    setor:'gk'},
+        {num:12,nome:'Weverton',         pos:'Goleiro',     clube:'Grêmio',        setor:'gk'},
+        {num:4, nome:'Marquinhos',       pos:'Zagueiro',    clube:'PSG',                setor:'def'},
+        {num:3, nome:'Gabriel Magalhães',pos:'Zagueiro',clube:'Arsenal',           setor:'def'},
+        {num:14,nome:'Bremer',           pos:'Zagueiro',    clube:'Juventus',           setor:'def'},
+        {num:2, nome:'Danilo',           pos:'Lateral',     clube:'Flamengo',           setor:'def'},
+        {num:6, nome:'Douglas Santos',   pos:'Lateral',     clube:'Zenit',              setor:'def'},
+        {num:13,nome:'Alex Sandro',      pos:'Lateral',     clube:'Flamengo',           setor:'def'},
+        {num:24,nome:'Ibañez',      pos:'Zagueiro',    clube:'Al-Ahli',            setor:'def'},
+        {num:15,nome:'Léo Pereira', pos:'Zagueiro',    clube:'Flamengo',           setor:'def'},
+        {num:25,nome:'Wesley',           pos:'Lateral',     clube:'Roma',               setor:'def'},
+        {num:5, nome:'Casemiro',         pos:'Volante',     clube:'Manchester United',  setor:'mid'},
+        {num:8, nome:'Bruno Guimarães',pos:'Volante',  clube:'Newcastle',          setor:'mid'},
+        {num:16,nome:'Danilo Santos',    pos:'Volante',     clube:'Botafogo',           setor:'mid'},
+        {num:17,nome:'Fabinho',          pos:'Volante',     clube:'Al-Ittihad',         setor:'mid'},
+        {num:10,nome:'Lucas Paqueta',    pos:'Meia',        clube:'Flamengo',           setor:'mid'},
+        {num:7, nome:'Matheus Cunha',    pos:'Atacante',    clube:'Manchester United',  setor:'att'},
+        {num:11,nome:'Raphinha',         pos:'Atacante',    clube:'Barcelona',          setor:'att'},
+        {num:9, nome:'Neymar',           pos:'Atacante',    clube:'Santos',             setor:'att'},
+        {num:20,nome:'Luiz Henrique',    pos:'Atacante',    clube:'Zenit',              setor:'att'},
+        {num:19,nome:'Endrick',          pos:'Atacante',    clube:'Lyon',               setor:'att'},
+        {num:21,nome:'Igor Thiago',      pos:'Atacante',    clube:'Brentford',          setor:'att'},
+        {num:22,nome:'Gabriel Martinelli',pos:'Atacante',   clube:'Arsenal',            setor:'att'},
+        {num:26,nome:'Rayan',            pos:'Atacante',    clube:'Bournemouth',        setor:'att'},
+        {num:18,nome:'Vinicius Júnior',pos:'Atacante', clube:'Real Madrid',        setor:'att'}
     ],
 };
 
@@ -1376,11 +1390,21 @@ function getFlagIso(shortName,tla){
 
 function renderJogosRealizados(){
     const el=document.getElementById('jogos-realizados-content');
-    if(!dataCopa.jogos.length){el.innerHTML='<p style="color:var(--text-3)">Nenhum jogo realizado ainda.</p>';return;}
-    el.innerHTML=dataCopa.jogos.map(j=>`<div class="list-item">
-        <strong>Brasil ${esc(j.placar)} ${esc(j.adv)}</strong>
-        <br><small>${esc(j.data)} — ${esc(j.info)}</small>
-    </div>`).join('');
+    if(!dataCopa.jogos.length){el.innerHTML='<p style="color:var(--text-3);padding:8px 0">Nenhum jogo realizado ainda.</p>';return;}
+    el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:.85rem">'
+        +'<thead><tr>'
+        +'<th style="text-align:left;padding:7px 0;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-3);border-bottom:2px solid var(--border)">Data</th>'
+        +'<th style="text-align:left;padding:7px 8px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-3);border-bottom:2px solid var(--border)">Partida</th>'
+        +'<th style="text-align:center;padding:7px 0;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-3);border-bottom:2px solid var(--border)">Placar</th>'
+        +'<th style="text-align:right;padding:7px 0;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-3);border-bottom:2px solid var(--border)">Fase</th>'
+        +'</tr></thead><tbody>'
+        +dataCopa.jogos.map(j=>'<tr style="border-bottom:1px solid var(--border)">'
+            +'<td style="padding:9px 0;color:var(--text-3);font-size:.78rem;white-space:nowrap">'+esc(j.data)+'</td>'
+            +'<td style="padding:9px 8px;font-weight:600">🇧🇷 Brasil × '+esc(j.adv)+'</td>'
+            +'<td style="padding:9px 0;text-align:center"><span style="background:var(--blue);color:#fff;padding:3px 10px;border-radius:20px;font-weight:700;font-size:.82rem;white-space:nowrap">'+esc(j.placar)+'</span></td>'
+            +'<td style="padding:9px 0;text-align:right;font-size:.75rem;color:var(--text-3);white-space:nowrap">'+esc(j.info)+'</td>'
+            +'</tr>').join('')
+        +'</tbody></table>';
 }
 
 
