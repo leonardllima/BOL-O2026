@@ -342,12 +342,11 @@
     .count-box small { font-size: .65rem; text-transform: uppercase; letter-spacing: .5px; margin-top: 3px; display:block; color: rgba(255,255,255,.7); }
 
     .encerrado-aviso {
-        display:flex; align-items:center; justify-content:center; gap:8px;
-        background: var(--red-lt); border: 1px solid var(--red);
-        border-left: 4px solid var(--red);
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        background: var(--red-lt); border: 2px solid var(--red);
         border-radius: var(--r-sm); padding: 14px 16px;
-        color: var(--red); font-weight: 700; font-size: .9rem; margin-top: 16px;
-        text-align: center; flex-direction: column;
+        color: var(--red); font-weight: 700; font-size: .9rem;
+        text-align: center; width: 100%; box-sizing: border-box;
     }
 
     /* ── QUADRO PÚBLICO ───────────────────────────────────── */
@@ -716,9 +715,6 @@
             <h3 id="pj-titulo">🇧🇷 Carregando...</h3>
             <p id="pj-data"></p>
             <p id="pj-info" style="font-size:.83rem;color:var(--text-3)"></p>
-            <div id="encerrado-aviso" style="display:none" class="encerrado-aviso">
-                ⛔ Palpites encerrados para esta partida.
-            </div>
             <div class="countdown" id="countdown-wrap">
                 <div class="count-box"><span id="cd-d">00</span><small>Dias</small></div>
                 <div class="count-box"><span id="cd-h">00</span><small>Horas</small></div>
@@ -748,19 +744,19 @@
             </div>
         </div>
 
-        <div style="margin:12px 14px 4px">
-            <div style="padding:11px 14px;background:#fff3e0;border:2px solid var(--orange);border-radius:var(--r-sm);font-size:.82rem;font-weight:700;color:#b34000;line-height:1.5;text-align:center;margin-bottom:8px">
+        <div style="margin:12px 14px 4px;display:flex;flex-direction:column;gap:8px">
+            <div style="padding:12px 16px;background:#fff3e0;border:2px solid var(--orange);border-radius:var(--r-sm);font-size:.82rem;font-weight:700;color:#b34000;line-height:1.5;text-align:center">
                 ⚠️ TAXA ADMINISTRATIVA: 10% sobre o valor arrecadado.
                 <div style="font-weight:400;font-size:.76rem;color:#7a2e00;margin-top:3px">Exemplo: R$ 100,00 arrecadados → Taxa R$ 10,00 → Prêmio R$ 90,00</div>
             </div>
-            <div style="padding:10px 14px;background:#fff3e0;border:1px solid #ffb74d;border-left:4px solid var(--orange);border-radius:var(--r-sm);font-size:.76rem;color:#7a2e00;line-height:1.5">
+            <div style="padding:12px 16px;background:#fff3e0;border:2px solid var(--orange);border-radius:var(--r-sm);font-size:.76rem;font-weight:500;color:#7a2e00;line-height:1.5;text-align:center">
                 ⚠️ Se nenhum participante acertar o placar exato, o valor será devolvido via PIX informado no cadastro, com desconto da taxa de 10%.
             </div>
         </div>
         <div id="bolao-btn-wrap" style="margin:14px auto 0;max-width:300px">
             <button class="btn-modern btn-primary btn-block" id="btn-bolao" type="button">🎯 Fazer Meu Palpite</button>
         </div>
-        <div id="encerrado-card" style="display:none;margin-top:18px" class="encerrado-aviso">
+        <div id="encerrado-card" style="display:none;margin:8px 14px 0;padding:12px 16px;background:#fdecea;border:2px solid var(--red);border-radius:var(--r-sm);font-size:.82rem;font-weight:700;color:var(--red);text-align:center">
             ⛔ Palpites encerrados para esta partida.
         </div>
     </div>
@@ -1266,17 +1262,17 @@ function renderProximoJogo(){
     document.getElementById('header-subtitle').textContent=`Brasil × ${j.adversario} — ${j.dataStr}`;
 
     // Encerramento
-    const avi=document.getElementById('encerrado-aviso');
+    // encerrado-aviso removido do card Próxima Partida — apenas encerrado-card no bolão
     const carDiv=document.getElementById('encerrado-card');
     const btnWrap=document.getElementById('bolao-btn-wrap');
     const btnBolao=document.getElementById('btn-bolao');
     if(enc){
-        if(avi)avi.style.display='block';
+        // avi removido
         if(carDiv)carDiv.style.display='block';
         if(btnWrap)btnWrap.style.display='none';
         if(btnBolao)btnBolao.disabled=true;
     }else{
-        if(avi)avi.style.display='none';
+        // avi removido
         if(carDiv)carDiv.style.display='none';
         if(btnWrap)btnWrap.style.display='block';
         if(btnBolao)btnBolao.disabled=false;
