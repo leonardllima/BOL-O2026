@@ -628,7 +628,11 @@
 
     /* Tabela de apostas: coluna ações com largura mínima */
     #admin-apostas-tbody td:last-child,
-    #financeiro-tbody td:last-child { min-width: 280px; }
+    #financeiro-tbody td:last-child { min-width: 320px; }
+
+    /* Garantir que os 3 botões fiquem em linha no desktop */
+    #admin-apostas-tbody .action-btns,
+    #financeiro-tbody .action-btns { flex-wrap: nowrap; gap: 5px; }
 
     /* Mobile: botões menores mas ainda em linha */
     @media(max-width:600px) {
@@ -949,19 +953,61 @@ function traduzirTime(nome){if(!nome)return nome;if(TIMES_PT[nome])return TIMES_
 
 // ISO codes para flagcdn — mapeamento de nomes de times
 const FLAG_MAP = {
-    scotland:'gb-sct', england:'gb-eng', wales:'gb-wls', brazil:'br',brasil:'br',
+    // Inglês
+    scotland:'gb-sct', england:'gb-eng', wales:'gb-wls', brazil:'br',
     argentina:'ar', france:'fr', germany:'de', spain:'es', portugal:'pt', italy:'it',
     netherlands:'nl', uruguay:'uy', colombia:'co', mexico:'mx', usa:'us',
-    canada:'ca', morocco:'ma', marrocos:'ma', senegal:'sn', japan:'jp',
-    australia:'au', croatia:'hr', swiss:'ch', switzerland:'ch', denmark:'dk',
-    belgium:'be', serbia:'rs', poland:'pl', ecuador:'ec', iran:'ir',
-    cameroon:'cm', ghana:'gh', tunesia:'tn', tunisia:'tn', haiti:'ht',
-    'south korea':'kr','costa rica':'cr','saudi arabia':'sa','new zealand':'nz',
+    canada:'ca', morocco:'ma', senegal:'sn', japan:'jp', australia:'au',
+    croatia:'hr', switzerland:'ch', swiss:'ch', denmark:'dk', belgium:'be',
+    serbia:'rs', poland:'pl', ecuador:'ec', iran:'ir', cameroon:'cm',
+    ghana:'gh', tunisia:'tn', tunesia:'tn', haiti:'ht', turkey:'tr',
+    nigeria:'ng', egypt:'eg', algeria:'dz', mali:'ml', georgia:'ge',
+    ukraine:'ua', albania:'al', slovakia:'sk', slovenia:'si', romania:'ro',
+    hungary:'hu', bulgaria:'bg', paraguay:'py', bolivia:'bo', chile:'cl',
+    peru:'pe', venezuela:'ve', honduras:'hn', indonesia:'id', iraq:'iq',
+    jordan:'jo', 'south korea':'kr', 'costa rica':'cr', 'saudi arabia':'sa',
+    'new zealand':'nz', 'united states':'us', 'ivory coast':'ci',
+    'south africa':'za', 'bosnia-herzegovina':'ba', 'north macedonia':'mk',
+    // Português (traduzidos)
+    brasil:'br', escócia:'gb-sct', escocia:'gb-sct', inglaterra:'gb-eng',
+    gales:'gb-wls', irlanda:'ie', alemanha:'de', franca:'fr', 'frança':'fr',
+    espanha:'es', italia:'it', 'itália':'it', holanda:'nl', 'países baixos':'nl',
+    belgica:'be', 'bélgica':'be', croacia:'hr', 'croácia':'hr', servia:'rs',
+    'sérvia':'rs', dinamarca:'dk', polonia:'pl', 'polônia':'pl', suica:'ch',
+    'suíça':'ch', marrocos:'ma', camaroes:'cm', 'camarões':'cm', gana:'gh',
+    tunisia:'tn', tunisia:'tn', egito:'eg', nigeria:'ng', 'nigéria':'ng',
+    argelia:'dz', 'argélia':'dz', turquia:'tr', georgia:'ge', 'geórgia':'ge',
+    ucrania:'ua', 'ucrânia':'ua', albania:'al', 'albânia':'al', eslovaquia:'sk',
+    'eslováquia':'sk', eslovenia:'si', 'eslovênia':'si', romenia:'ro',
+    'romênia':'ro', hungria:'hu', bulgaria:'bg', 'bulgária':'bg',
+    paraguai:'py', bolivia:'bo', 'bolívia':'bo', chile:'cl', peru:'pe',
+    venezuela:'ve', honduras:'hn', indonesia:'id', 'indonésia':'id',
+    iraque:'iq', jordania:'jo', 'jordânia':'jo', afeganistao:'af',
+    'coreia do sul':'kr', 'costa rica':'cr', 'arabia saudita':'sa',
+    'arábia saudita':'sa', 'nova zelândia':'nz', 'nova zelandia':'nz',
+    'estados unidos':'us', 'costa do marfim':'ci', 'africa do sul':'za',
+    'áfrica do sul':'za', 'bosnia e herzegovina':'ba', 'bósnia e herzegovina':'ba',
+    'macedonia do norte':'mk', 'macedônia do norte':'mk', haiti:'ht',
+    japao:'jp', 'japão':'jp', australia:'au', 'austrália':'au',
+    ira:'ir', 'irã':'ir',
 };
+function normalizeStr(s){
+    try{return(s||'').toLowerCase().trim().normalize('NFD').replace(/[̀-ͯ]/g,'');}
+    catch(e){return(s||'').toLowerCase().trim();}
+}
 function getFlagUrl(nome){
-    const n=(nome||'').toLowerCase().trim();
-    const code=FLAG_MAP[n]||Object.keys(FLAG_MAP).find(k=>n.includes(k)||k.includes(n));
-    return code?`https://flagcdn.com/h80/${FLAG_MAP[code]||code}.png`:null;
+    if(!nome)return null;
+    const n=normalizeStr(nome);
+    // Busca exata normalizada
+    for(const[k,v]of Object.entries(FLAG_MAP)){
+        if(normalizeStr(k)===n)return`https://flagcdn.com/h80/${v}.png`;
+    }
+    // Busca parcial normalizada
+    for(const[k,v]of Object.entries(FLAG_MAP)){
+        const kn=normalizeStr(k);
+        if(n.includes(kn)||kn.includes(n))return`https://flagcdn.com/h80/${v}.png`;
+    }
+    return null;
 }
 
 let adminToken = null;
@@ -1440,7 +1486,12 @@ function adicionarCampoPalpite(){
         </div>
         <span class="palpite-vs">×</span>
         <div style="display:flex;flex-direction:column;flex:1;gap:2px">
-            <div style="font-size:.7rem;color:var(--text-3);text-align:center">${imgFlagHtml(adv,'18px')} ${esc(adv)}</div>
+            <div style="font-size:.7rem;color:var(--text-3);text-align:center">
+                ${jogoAtual?.adv_crest
+                    ? `<img src="${jogoAtual.adv_crest}" style="height:16px;object-fit:contain;vertical-align:middle" onerror="this.src='${getFlagUrl(adv)||''}';this.onerror=null">`
+                    : imgFlagHtml(adv,'16px')
+                } ${esc(adv)}
+            </div>
             <input type="number" min="0" max="50" placeholder="0" class="gols-adv">
         </div>
         <button type="button" class="btn-rm" aria-label="Remover palpite">✕</button>`;
