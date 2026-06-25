@@ -1975,10 +1975,14 @@ async function marcarDevolvido(btn){
     btn.disabled=true;
     btn.textContent='Registrando...';
     try{
-        const res=await adminFetch(`/api/admin/aposta/${apostaId}/devolver`,{method:'PUT'});
+        // Usar fetch direto (não adminFetch) para tratar status 4xx sem throw
+        const res=await fetch(`${PROXY_BASE}/api/admin/aposta/${apostaId}/devolver`,{
+            method:'PUT',
+            headers:{'Authorization':`Bearer ${adminToken}`}
+        });
         const data=await res.json();
         if(res.status===409){
-            // Já devolvido — atualizar visual do botão
+            // Já devolvido — atualizar visual
             const td=btn.parentElement;
             td.innerHTML='<span style="background:#e8f5e9;color:#2e7d32;padding:3px 10px;border-radius:12px;font-size:.74rem;font-weight:700">✅ Já Devolvido</span>';
             const tr=td.closest('tr');
@@ -1991,6 +1995,7 @@ async function marcarDevolvido(btn){
             btn.disabled=false;
             return;
         }
+        if(res.status===401){adminToken=null;closeModal('modal-admin-panel');abrirAdminLogin();return;}
         if(!res.ok)throw new Error(data.error||'Erro ao registrar');
         // Atualizar célula para estado devolvido
         const td=btn.parentElement;
