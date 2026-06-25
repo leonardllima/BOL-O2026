@@ -1978,7 +1978,15 @@ async function marcarDevolvido(btn){
         const res=await adminFetch(`/api/admin/aposta/${apostaId}/devolver`,{method:'PUT'});
         const data=await res.json();
         if(res.status===409){
-            alert('Esta devolução já foi registrada anteriormente.');
+            // Já devolvido — atualizar visual do botão
+            const td=btn.parentElement;
+            td.innerHTML='<span style="background:#e8f5e9;color:#2e7d32;padding:3px 10px;border-radius:12px;font-size:.74rem;font-weight:700">✅ Já Devolvido</span>';
+            const tr=td.closest('tr');
+            if(tr)tr.style.background='#f1f8e9';
+            return;
+        }
+        if(res.status===400){
+            alert(data.error||'Esta aposta não está confirmada como PAGO.');
             btn.textContent='💸 Marcar Devolvido';
             btn.disabled=false;
             return;
@@ -1990,6 +1998,9 @@ async function marcarDevolvido(btn){
         td.innerHTML='<span style="background:#e8f5e9;color:#2e7d32;padding:3px 10px;border-radius:12px;font-size:.74rem;font-weight:700">✅ Devolvido<br><small style="font-weight:400;color:#555">'+dt+'</small></span>';
         const tr=td.closest('tr');
         if(tr)tr.style.background='#f1f8e9';
+        // Atualizar o dashboard financeiro em segundo plano
+        if(typeof carregarDashboard === 'function')
+            setTimeout(()=>carregarDashboard(), 500);
     }catch(e){
         alert('Erro: '+e.message);
         btn.textContent='💸 Marcar Devolvido';
