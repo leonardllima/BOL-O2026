@@ -1323,11 +1323,14 @@ function renderProximoJogo(){
 }
 
 function renderGrupoC(){
-    // Renderiza com dados de fallback (substituto até API carregar)
+    // Card de classificação removido — retornar silenciosamente
     const t=document.getElementById('grupo-tbody');
+    if(!t)return;
     if(!dataCopa.grupoC.length)return;
-    document.getElementById('grupo-loading').style.display='none';
-    document.getElementById('grupo-table-wrap').style.display='block';
+    const _gl=document.getElementById('grupo-loading');
+    const _gw=document.getElementById('grupo-table-wrap');
+    if(_gl)_gl.style.display='none';
+    if(_gw)_gw.style.display='block';
     t.innerHTML=dataCopa.grupoC.map((s,i)=>{
         const isBr=s.selecao==='Brasil'||s.isBrasil;
         const sg=s.gp-s.gc;
