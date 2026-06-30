@@ -883,6 +883,9 @@
                 <div class="stat-card"><div class="sv" id="stat-ticket">—</div><div class="sl">📈 Ticket Médio</div></div>
                 <div class="stat-card"><div class="sv" id="stat-media">—</div><div class="sl">🎯 Média Palpites</div></div>
                 <div class="stat-card sy"><div class="sv" id="stat-devolvido">—</div><div class="sl">💸 Total Devolvido</div></div>
+                <div class="stat-card sb"><div class="sv" id="stat-premio-pago">—</div><div class="sl">🏆 Prêmios Pagos</div></div>
+                <div class="stat-card sr"><div class="sv" id="stat-premio-pend">—</div><div class="sl">⏳ Prêmios Pendentes</div></div>
+                <div class="stat-card"><div class="sv" id="stat-lucro">—</div><div class="sl">💹 Lucro (taxa líq.)</div></div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px" id="dash-tops"></div>
         </div>
@@ -1269,13 +1272,15 @@ function processarDadosCopa(data){
     }
     const passados=brMatches.filter(m=>m.status==='FINISHED').sort((a,b)=>new Date(b.utcDate)-new Date(a.utcDate));
     if(passados.length>0){
-        dataCopa.jogos=passados.slice(0,5).map(m=>{
+        dataCopa.jogos=passados.map(m=>{
             const isBr=(m.homeTeam?.name||'').toLowerCase().includes('braz')||(m.homeTeam?.name||'').toLowerCase().includes('bras');
-            const adv=traduzirTime(isBr?(m.awayTeam?.shortName||m.awayTeam?.name):(m.homeTeam?.shortName||m.homeTeam?.name));
+            const advTeam=isBr?m.awayTeam:m.homeTeam;
+            const adv=traduzirTime(advTeam?.shortName||advTeam?.name||'');
             const gpBr=isBr?m.score?.fullTime?.home:m.score?.fullTime?.away;
             const gcBr=isBr?m.score?.fullTime?.away:m.score?.fullTime?.home;
             const d=new Date(m.utcDate).toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'numeric'});
-            return{data:d,adv,placar:`${gpBr??'?'}-${gcBr??'?'}`,info:traduzirFase(m.stage)};
+            const advFlag=advTeam?.flag||getFlagUrl(adv)||'';
+            return{data:d,adv,placar:`${gpBr??'?'} - ${gcBr??'?'}`,info:traduzirFase(m.stage),advFlag};
         });
     }
     // Determina fase atual do Brasil
@@ -1488,19 +1493,30 @@ function renderJogosRealizados(){
         return;
     }
     el.innerHTML='<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">'
-        +'<table style="width:100%;border-collapse:collapse;font-size:.84rem;min-width:280px">'
+        +'<table style="width:100%;border-collapse:collapse;font-size:.84rem;min-width:320px">'
         +'<thead><tr>'
         +'<th style="text-align:left;padding:8px 6px 8px 0;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-3);border-bottom:2px solid var(--border);white-space:nowrap">Data</th>'
-        +'<th style="text-align:left;padding:8px 6px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-3);border-bottom:2px solid var(--border)">Partida</th>'
+        +'<th style="text-align:center;padding:8px 6px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-3);border-bottom:2px solid var(--border)">Partida</th>'
         +'<th style="text-align:center;padding:8px 6px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-3);border-bottom:2px solid var(--border);white-space:nowrap">Placar</th>'
         +'<th style="text-align:right;padding:8px 0 8px 6px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-3);border-bottom:2px solid var(--border);white-space:nowrap">Fase</th>'
         +'</tr></thead><tbody>'
-        +dataCopa.jogos.map(j=>'<tr style="border-bottom:1px solid var(--border)">'
-            +'<td style="padding:9px 6px 9px 0;color:var(--text-3);font-size:.78rem;white-space:nowrap">'+esc(j.data)+'</td>'
-            +'<td style="padding:9px 6px;font-weight:600">🇧🇷 Brasil '+esc(j.placar)+' '+esc(j.adv)+'</td>'
-            +'<td style="padding:9px 6px;text-align:center"><span style="background:var(--blue);color:#fff;padding:3px 10px;border-radius:20px;font-weight:700;font-size:.8rem;white-space:nowrap">'+esc(j.placar)+'</span></td>'
-            +'<td style="padding:9px 0 9px 6px;text-align:right;font-size:.75rem;color:var(--text-3);white-space:nowrap">'+esc(j.info)+'</td>'
-            +'</tr>').join('')
+        +dataCopa.jogos.map(j=>{
+            const flagAdv=j.advFlag||getFlagUrl(j.adv)||'';
+            const imgBr='<img src="https://flagcdn.com/h20/br.png" alt="Brasil" style="height:18px;border-radius:2px;vertical-align:middle;margin-right:4px">';
+            const imgAdv=flagAdv?'<img src="'+flagAdv+'" alt="'+esc(j.adv)+'" style="height:18px;border-radius:2px;vertical-align:middle;margin-right:4px">':'';
+            return '<tr style="border-bottom:1px solid var(--border)">'
+                +'<td style="padding:10px 6px 10px 0;color:var(--text-3);font-size:.78rem;white-space:nowrap">'+esc(j.data)+'</td>'
+                +'<td style="padding:10px 6px;text-align:center">'
+                    +imgBr+'<strong>Brasil</strong>'
+                    +' <span style="color:var(--text-3);font-size:.8rem">×</span> '
+                    +imgAdv+'<strong>'+esc(j.adv)+'</strong>'
+                +'</td>'
+                +'<td style="padding:10px 6px;text-align:center">'
+                    +'<span style="background:var(--blue);color:#fff;padding:3px 12px;border-radius:20px;font-weight:700;font-size:.82rem;white-space:nowrap">'+esc(j.placar)+'</span>'
+                +'</td>'
+                +'<td style="padding:10px 0 10px 6px;text-align:right;font-size:.74rem;color:var(--text-3);white-space:nowrap">'+esc(j.info)+'</td>'
+                +'</tr>';
+        }).join('')
         +'</tbody></table></div>';
 }
 
@@ -1879,6 +1895,9 @@ async function carregarDashboard(){
         document.getElementById('stat-ticket').textContent=fmtBRL(d.ticket_medio);
         document.getElementById('stat-media').textContent=Number(d.media_palpites).toFixed(1);
         document.getElementById('stat-devolvido').textContent=fmtBRL(d.total_devolvido||0);
+        document.getElementById('stat-premio-pago').textContent=fmtBRL(d.total_premio_pago||0)+(d.qtd_premio_pago?' ('+d.qtd_premio_pago+'×)':'');
+        document.getElementById('stat-premio-pend').textContent=fmtBRL(d.total_premio_pendente||0)+(d.qtd_premio_pendente?' ('+d.qtd_premio_pendente+'×)':'');
+        document.getElementById('stat-lucro').textContent=fmtBRL(d.lucro||0);
         document.getElementById('dash-tops').innerHTML='<div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;margin-bottom:12px"><div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);margin-bottom:10px">🏅 Top Participantes</div><table style="width:100%;border-collapse:collapse;font-size:.82rem"><thead><tr><th style="padding:7px 10px;text-align:center;font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--text-3);border-bottom:2px solid var(--border)">#</th><th style="padding:7px 10px;text-align:left;font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--text-3);border-bottom:2px solid var(--border)">Nome</th><th style="padding:7px 10px;text-align:center;font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--text-3);border-bottom:2px solid var(--border)">Palpites</th></tr></thead><tbody>'+d.top_participantes.map((p,i)=>'<tr style="border-bottom:1px solid var(--border)">'+'<td style="padding:8px 10px;text-align:center;color:var(--text-3);font-weight:700">'+(i+1)+'</td>'+'<td style="padding:8px 10px;font-weight:600">'+escUp(p.nome||'')+'</td>'+'<td style="padding:8px 10px;text-align:center"><span style="background:var(--green-lt);color:var(--green-dk);padding:2px 8px;border-radius:12px;font-weight:700;font-size:.78rem">'+(p.qtd!=null?p.qtd:0)+'</span></td>'+'</tr>').join('')+'</tbody></table></div><div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px"><div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);margin-bottom:10px">🏆 Placares Mais Apostados</div><table style="width:100%;border-collapse:collapse;font-size:.82rem"><thead><tr><th style="padding:7px 10px;text-align:center;font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--text-3);border-bottom:2px solid var(--border)">#</th><th style="padding:7px 10px;text-align:center;font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--text-3);border-bottom:2px solid var(--border)">Placar</th><th style="padding:7px 10px;text-align:center;font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--text-3);border-bottom:2px solid var(--border)">Votos</th></tr></thead><tbody>'+d.top_placares.map((p,i)=>'<tr style="border-bottom:1px solid var(--border)">'+'<td style="padding:8px 10px;text-align:center;color:var(--text-3);font-weight:700">'+(i+1)+'</td>'+'<td style="padding:8px 10px;text-align:center;font-weight:600">🇧🇷 '+(p.gols_brasil!=null?p.gols_brasil:'?')+' × '+(p.gols_adversario!=null?p.gols_adversario:'?')+'</td>'+'<td style="padding:8px 10px;text-align:center"><span style="background:var(--blue-lt);color:var(--blue);padding:2px 8px;border-radius:12px;font-weight:700;font-size:.78rem">'+(p.qtd!=null?p.qtd:0)+'×</span></td>'+'</tr>').join('')+'</tbody></table></div>';
     }catch(e){body.innerHTML=`<div class="empty">Erro: ${esc(e.message)}</div>`;}
 }
@@ -1965,9 +1984,28 @@ async function verDetalheJogo(jogoId){
                 </table></div>${(()=>{
                 if(jogo.placar_brasil===null||jogo.placar_adversario===null)return '';
                 if(financeiro.qtd_vencedores>0){
+                    const _vRows=apostas.filter(a=>a.vencedor).map(a=>{
+                        const _jp=a.premio_pago===true||Number(a.premio_pago)===1;
+                        const _dt=a.data_premio?new Date(a.data_premio).toLocaleDateString('pt-BR'):'';
+                        const _sc=_jp
+                            ?'<span style="background:#e8f5e9;color:#2e7d32;padding:2px 8px;border-radius:10px;font-size:.74rem;font-weight:700">✅ Pago '+_dt+'</span> '
+                              +'<button class="btn-modern btn-sm btn-warning" data-aid="'+esc(a.id)+'" onclick="marcarPremio(this,\'desfazer\')" style="font-size:.71rem">↩️ Desfazer</button>'
+                            :'<button class="btn-modern btn-sm btn-success" data-aid="'+esc(a.id)+'" onclick="marcarPremio(this,\'marcar\')" style="font-size:.74rem">💰 Marcar Pago</button>';
+                        return '<tr style="border-bottom:1px solid #c8e6c9">'
+                            +'<td style="padding:7px 6px;font-weight:700">'+escUp(a.nome)+'</td>'
+                            +'<td style="padding:7px 6px;font-size:.78rem">'+esc(a.pix_key||'—')+'</td>'
+                            +'<td style="padding:7px 6px;text-align:right;font-weight:700;color:var(--green)">'+fmtBRL(financeiro.valor_individual)+'</td>'
+                            +'<td style="padding:7px 6px;text-align:center">'+_sc+'</td>'
+                            +'</tr>';
+                    }).join('');
                     return '<div style="margin-top:18px;padding:14px;background:var(--green-lt);border:1px solid #a5d6a7;border-left:4px solid var(--green);border-radius:var(--r-md)">'
-                        +'<strong style="color:var(--green-dk)">🏆 '+financeiro.qtd_vencedores+' vencedor'+(financeiro.qtd_vencedores>1?'es':'')+' — Prêmio individual: '+fmtBRL(financeiro.valor_individual)+'</strong>'
-                        +'</div>';
+                        +'<strong style="color:var(--green-dk);display:block;margin-bottom:10px">🏆 '+financeiro.qtd_vencedores+' vencedor'+(financeiro.qtd_vencedores>1?'es':'')+' — Prêmio individual: '+fmtBRL(financeiro.valor_individual)+'</strong>'
+                        +'<table style="width:100%;border-collapse:collapse;font-size:.82rem"><thead><tr>'
+                        +'<th style="text-align:left;padding:5px 6px;font-size:.7rem;color:var(--text-3);border-bottom:1px solid #a5d6a7">Nome</th>'
+                        +'<th style="text-align:left;padding:5px 6px;font-size:.7rem;color:var(--text-3);border-bottom:1px solid #a5d6a7">Chave PIX</th>'
+                        +'<th style="text-align:right;padding:5px 6px;font-size:.7rem;color:var(--text-3);border-bottom:1px solid #a5d6a7">Prêmio</th>'
+                        +'<th style="text-align:center;padding:5px 6px;font-size:.7rem;color:var(--text-3);border-bottom:1px solid #a5d6a7">Status Pgto</th>'
+                        +'</tr></thead><tbody>'+_vRows+'</tbody></table></div>';
                 } else {
                     const devRows=apostas.filter(a=>a.status_pagamento==='PAGO').map(a=>{
                         const isDevol=a.devolvido===true||a.devolvido===1;
@@ -2015,6 +2053,43 @@ async function registrarResultado(jogoId){
 }
 
 function abrirGanhadoresById(btn){abrirGanhadores(btn.dataset.jid);}
+function abrirVoucherById(btn){abrirVoucher(btn.dataset.aid);}
+function validarPagamentoById(btn){validarPagamento(btn.dataset.aid,btn.dataset.st);}
+function excluirApostaById(btn){excluirAposta(btn.dataset.aid);}
+
+async function marcarPremio(btn,acao){
+    const apostaId=btn.dataset.aid;
+    if(!apostaId)return;
+    const conf=acao==='marcar'
+        ?confirm('Confirmar pagamento do prêmio para este vencedor?')
+        :confirm('Desfazer marcação de prêmio pago?');
+    if(!conf)return;
+    btn.disabled=true;
+    const origText=btn.textContent;
+    btn.textContent='...';
+    try{
+        const res=await fetch(`${PROXY_BASE}/api/admin/aposta/${apostaId}/premio`,{
+            method:'PUT',
+            headers:{'Authorization':`Bearer ${adminToken}`,'Content-Type':'application/json'},
+            body:JSON.stringify({acao})
+        });
+        const data=await res.json();
+        if(!res.ok)throw new Error(data.error||'Erro');
+        const td=btn.parentElement;
+        const dt=data.data_premio?new Date(data.data_premio).toLocaleDateString('pt-BR'):'';
+        if(data.premio_pago){
+            td.innerHTML='<span style="background:#e8f5e9;color:#2e7d32;padding:2px 8px;border-radius:10px;font-size:.74rem;font-weight:700">✅ Pago '+dt+'</span> '
+                +'<button class="btn-modern btn-sm btn-warning" data-aid="'+apostaId+'" onclick="marcarPremio(this,\'desfazer\')" style="font-size:.71rem">↩️ Desfazer</button>';
+        } else {
+            td.innerHTML='<button class="btn-modern btn-sm btn-success" data-aid="'+apostaId+'" onclick="marcarPremio(this,\'marcar\')" style="font-size:.74rem">💰 Marcar Pago</button>';
+        }
+        if(typeof carregarDashboard==='function')setTimeout(()=>carregarDashboard(),300);
+    }catch(e){
+        alert('Erro: '+e.message);
+        btn.textContent=origText;
+        btn.disabled=false;
+    }
+}
 
 async function marcarDevolvido(btn){
     const apostaId=btn.dataset.aid;
@@ -2220,7 +2295,11 @@ async function carregarFinanceiro(){
             '<div class="stat-card"><div class="sv">'+fmtBRL(dash.total_pago)+'</div><div class="sl">✅ Total Confirmado</div></div>'+
             '<div class="stat-card sr"><div class="sv">'+fmtBRL(dash.total_pendente)+'</div><div class="sl">⏳ Total Pendente</div></div>'+
             '<div class="stat-card sb"><div class="sv">'+fmtBRL(dash.ticket_medio)+'</div><div class="sl">📈 Ticket Médio</div></div>'+
-            '<div class="stat-card sy"><div class="sv">'+fmtBRL(dash.total_devolvido||0)+'</div><div class="sl">💸 Total Devolvido</div></div>';
+            '<div class="stat-card sy"><div class="sv">'+fmtBRL(dash.total_devolvido||0)+'</div><div class="sl">💸 Total Devolvido</div></div>'+
+            '<div class="stat-card sb"><div class="sv">'+fmtBRL(dash.total_premio_pago||0)+'</div><div class="sl">🏆 Prêmios Pagos</div></div>'+
+            '<div class="stat-card sr"><div class="sv">'+fmtBRL(dash.total_premio_pendente||0)+'</div><div class="sl">⏳ Prêmios Pendentes</div></div>'+
+            '<div class="stat-card"><div class="sv">'+fmtBRL(dash.lucro||0)+'</div><div class="sl">💹 Lucro</div></div>'+
+            '<div class="stat-card sb"><div class="sv">'+fmtBRL(dash.saldo_caixa||0)+'</div><div class="sl">🏦 Saldo Caixa</div></div>';
         tbody.innerHTML=apostas.map(a=>`<tr>
             <td><strong>${escUp(a.nome)}</strong></td>
             <td><small>Brasil × ${esc(a.adversario)}</small></td>
