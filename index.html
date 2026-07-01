@@ -537,13 +537,25 @@
     .list-item { padding:10px 0; border-bottom:1px solid var(--border); font-size:.85rem; }
     .list-item:last-child { border:none; }
 
+    /* Tabela "Jogos Realizados" — layout limpo e centralizado */
+    .jr-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--border); border-radius:var(--r-md); }
+    .jr-table{ width:100%; border-collapse:collapse; font-size:.85rem; min-width:380px; }
+    .jr-table thead th{ text-align:center; padding:10px 8px; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-3); background:var(--surface-2); border-bottom:2px solid var(--border); white-space:nowrap; }
+    .jr-table tbody td{ text-align:center; padding:11px 8px; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .jr-table tbody tr:last-child td{ border-bottom:none; }
+    .jr-table tbody tr:nth-child(even){ background:var(--surface-2); }
+    .jr-partida{ display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap; font-weight:700; }
+    .jr-data-cell{ white-space:nowrap; color:var(--text-3); font-size:.78rem; }
+    .jr-fase-cell{ white-space:nowrap; color:var(--text-3); font-size:.76rem; }
+    .jr-placar-badge{ background:var(--blue); color:#fff; padding:3px 12px; border-radius:20px; font-weight:700; font-size:.82rem; white-space:nowrap; display:inline-block; }
+
     /* ── RESPONSIVO ───────────────────────────────────────── */
     @media(max-width:768px){
         *{ box-sizing:border-box; }
 
         /* Jogos realizados */
-        #jogos-realizados-content table { font-size:.78rem; }
-        #jogos-realizados-content th, #jogos-realizados-content td { padding:7px 4px; }
+        .jr-table { font-size:.78rem; }
+        .jr-table th, .jr-table td { padding:8px 5px; }
         /* Squad */
         .squad-grid { grid-template-columns:1fr !important; gap:10px; }
         .player-card { padding:8px 10px; }
@@ -592,9 +604,10 @@
         .adm-table { font-size:.76rem; }
         .adm-table th,.adm-table td { padding:7px 5px; }
         .adm-scroll { -webkit-overflow-scrolling:touch; }
-        /* Jogos realizados em mobile pequeno: empilhar */
-        #jogos-realizados-content .jr-data { display:block; color:var(--text-3); font-size:.72rem; }
-        #jogos-realizados-content .jr-fase { display:none; }
+        /* Jogos realizados em mobile pequeno: reduzir ainda mais */
+        .jr-table { font-size:.74rem; min-width:0; }
+        .jr-table th, .jr-table td { padding:7px 4px; }
+        .jr-fase-cell { font-size:.68rem; }
         /* Squad em coluna única */
         .squad-grid { grid-template-columns:1fr !important; }
         .admin-dash { grid-template-columns:1fr 1fr; }
@@ -1002,6 +1015,10 @@ const TIMES_PT = {
     'Georgia':'Geórgia','Ukraine':'Ucrânia','Austria':'Áustria','Greece':'Grécia',
     'Serbia':'Sérvia','Albania':'Albânia','Indonesia':'Indonésia',
     'Uzbekistan':'Uzbequístão','Iraq':'Iraque','Jordan':'Jordânia',
+    // Times faltantes do elenco completo da Copa 2026 (48 seleções)
+    'Norway':'Noruega','Sweden':'Suécia','Cape Verde':'Cabo Verde','Cabo Verde':'Cabo Verde',
+    'Curaçao':'Curaçao','Curacao':'Curaçao','Czechia':'República Tcheca','Türkiye':'Turquia',
+    'IR Iran':'Irã','DR Congo':'Congo','Congo DR':'Congo',"Côte d'Ivoire":'Costa do Marfim',
 };
 function traduzirTime(nome){if(!nome)return nome;if(TIMES_PT[nome])return TIMES_PT[nome];const l=nome.toLowerCase();for(const[en,pt]of Object.entries(TIMES_PT)){if(l===en.toLowerCase())return pt;}return nome;}
 
@@ -1022,6 +1039,10 @@ const FLAG_MAP = {
     jordan:'jo', 'south korea':'kr', 'costa rica':'cr', 'saudi arabia':'sa',
     'new zealand':'nz', 'united states':'us', 'ivory coast':'ci',
     'south africa':'za', 'bosnia-herzegovina':'ba', 'north macedonia':'mk',
+    norway:'no', sweden:'se', 'cape verde':'cv', 'cabo verde':'cv',
+    curaçao:'cw', curacao:'cw', czechia:'cz', 'türkiye':'tr', turkiye:'tr',
+    'ir iran':'ir', 'dr congo':'cd', 'congo dr':'cd', "côte d'ivoire":'ci', 'cote d\'ivoire':'ci',
+    'korea republic':'kr',
     // Português (traduzidos)
     brasil:'br', escócia:'gb-sct', escocia:'gb-sct', inglaterra:'gb-eng',
     gales:'gb-wls', irlanda:'ie', alemanha:'de', franca:'fr', 'frança':'fr',
@@ -1043,7 +1064,8 @@ const FLAG_MAP = {
     'áfrica do sul':'za', 'bosnia e herzegovina':'ba', 'bósnia e herzegovina':'ba',
     'macedonia do norte':'mk', 'macedônia do norte':'mk', haiti:'ht',
     japao:'jp', 'japão':'jp', australia:'au', 'austrália':'au',
-    ira:'ir', 'irã':'ir',
+    ira:'ir', 'irã':'ir', noruega:'no', suecia:'se', 'suécia':'se',
+    'costa do marfim':'ci',
 };
 function normalizeStr(s){
     try{return(s||'').toLowerCase().trim().normalize('NFD').replace(/[̀-ͯ]/g,'');}
@@ -1489,32 +1511,31 @@ function getFlagIso(shortName,tla){
 function renderJogosRealizados(){
     const el=document.getElementById('jogos-realizados-content');
     if(!dataCopa.jogos.length){
-        el.innerHTML='<p style="color:var(--text-3);padding:10px 0;font-size:.88rem">Nenhum jogo realizado ainda.</p>';
+        el.innerHTML='<p style="color:var(--text-3);padding:10px 0;font-size:.88rem;text-align:center">Nenhum jogo realizado ainda.</p>';
         return;
     }
-    el.innerHTML='<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">'
-        +'<table style="width:100%;border-collapse:collapse;font-size:.84rem;min-width:320px">'
+    el.innerHTML='<div class="jr-wrap">'
+        +'<table class="jr-table">'
         +'<thead><tr>'
-        +'<th style="text-align:left;padding:8px 6px 8px 0;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-3);border-bottom:2px solid var(--border);white-space:nowrap">Data</th>'
-        +'<th style="text-align:center;padding:8px 6px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-3);border-bottom:2px solid var(--border)">Partida</th>'
-        +'<th style="text-align:center;padding:8px 6px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-3);border-bottom:2px solid var(--border);white-space:nowrap">Placar</th>'
-        +'<th style="text-align:right;padding:8px 0 8px 6px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-3);border-bottom:2px solid var(--border);white-space:nowrap">Fase</th>'
+        +'<th>Data</th>'
+        +'<th>Partida</th>'
+        +'<th>Placar</th>'
+        +'<th>Fase</th>'
         +'</tr></thead><tbody>'
         +dataCopa.jogos.map(j=>{
+            const advPt=traduzirTime(j.adv);
             const flagAdv=j.advFlag||getFlagUrl(j.adv)||'';
-            const imgBr='<img src="https://flagcdn.com/h20/br.png" alt="Brasil" style="height:18px;border-radius:2px;vertical-align:middle;margin-right:4px">';
-            const imgAdv=flagAdv?'<img src="'+flagAdv+'" alt="'+esc(j.adv)+'" style="height:18px;border-radius:2px;vertical-align:middle;margin-right:4px">':'';
-            return '<tr style="border-bottom:1px solid var(--border)">'
-                +'<td style="padding:10px 6px 10px 0;color:var(--text-3);font-size:.78rem;white-space:nowrap">'+esc(j.data)+'</td>'
-                +'<td style="padding:10px 6px;text-align:center">'
-                    +imgBr+'<strong>Brasil</strong>'
-                    +' <span style="color:var(--text-3);font-size:.8rem">×</span> '
-                    +imgAdv+'<strong>'+esc(j.adv)+'</strong>'
-                +'</td>'
-                +'<td style="padding:10px 6px;text-align:center">'
-                    +'<span style="background:var(--blue);color:#fff;padding:3px 12px;border-radius:20px;font-weight:700;font-size:.82rem;white-space:nowrap">'+esc(j.placar)+'</span>'
-                +'</td>'
-                +'<td style="padding:10px 0 10px 6px;text-align:right;font-size:.74rem;color:var(--text-3);white-space:nowrap">'+esc(j.info)+'</td>'
+            const imgBr='<img src="https://flagcdn.com/h20/br.png" alt="Brasil" style="height:18px;border-radius:2px;vertical-align:middle">';
+            const imgAdv=flagAdv?'<img src="'+flagAdv+'" alt="'+esc(advPt)+'" style="height:18px;border-radius:2px;vertical-align:middle">':'';
+            return '<tr>'
+                +'<td class="jr-data-cell">'+esc(j.data)+'</td>'
+                +'<td><div class="jr-partida">'
+                    +imgBr+'<span>Brasil</span>'
+                    +'<span style="color:var(--text-3);font-weight:400">×</span>'
+                    +imgAdv+'<span>'+esc(advPt)+'</span>'
+                +'</div></td>'
+                +'<td><span class="jr-placar-badge">'+esc(j.placar)+'</span></td>'
+                +'<td class="jr-fase-cell">'+esc(j.info)+'</td>'
                 +'</tr>';
         }).join('')
         +'</tbody></table></div>';
@@ -1603,7 +1624,7 @@ async function carregarProximaPartidaParaBolao(){
         // Banner do bolão
         const bt=document.getElementById('bolao-banner-title');
         const bi=document.getElementById('bolao-banner-info');
-        if(bt)bt.textContent=`Brasil × ${j.adversario}`;
+        if(bt)bt.textContent=`Brasil × ${traduzirTime(j.adversario)}`;
         if(bi)bi.textContent=`${j.competicao||'Torneio 2026'} — ${j.fase||''} — ${dataCopa.proximoJogo.dataStr}`;
 
         // Bandeiras no banner
@@ -1941,6 +1962,13 @@ async function verDetalheJogo(jogoId){
     try{
         const res=await adminFetch(`/api/admin/jogos/${jogoId}`);
         const {jogo,apostas,top_placares,financeiro}=await res.json();
+        // Ganhadores: busca da MESMA fonte usada em "Ver Ganhadores" (/api/ganhadores) —
+        // única fonte de informação, evita divergência entre os dois painéis.
+        let gd=null;
+        try{
+            const gres=await fetch(`${PROXY_BASE}/api/ganhadores/${jogoId}`);
+            gd=await gres.json();
+        }catch(e){console.warn('[DetalheJogo] Erro ao buscar ganhadores:',e);}
         body.innerHTML=`
             <h2>⚽ Brasil × ${esc(jogo.adversario)}</h2>
             <p style="color:var(--text-3);margin-bottom:15px">${esc(jogo.competicao)} — ${esc(jogo.fase)} — ${fmtDateOnly(jogo.data_jogo)}</p>
@@ -1982,24 +2010,24 @@ async function verDetalheJogo(jogoId){
                             '</td></tr>';
                     }).join('')}</tbody>
                 </table></div>${(()=>{
-                if(jogo.placar_brasil===null||jogo.placar_adversario===null)return '';
-                if(financeiro.qtd_vencedores>0){
-                    const _vRows=apostas.filter(a=>a.vencedor).map(a=>{
-                        const _jp=a.premio_pago===true||Number(a.premio_pago)===1;
-                        const _dt=a.data_premio?new Date(a.data_premio).toLocaleDateString('pt-BR'):'';
+                if(!gd||!gd.resultado_disponivel)return '';
+                if(gd.financeiro.qtd_vencedores>0){
+                    const _vRows=gd.vencedores.map(v=>{
+                        const _jp=v.premio_pago===true;
+                        const _dt=v.data_premio?new Date(v.data_premio).toLocaleDateString('pt-BR'):'';
                         const _sc=_jp
                             ?'<span style="background:#e8f5e9;color:#2e7d32;padding:2px 8px;border-radius:10px;font-size:.74rem;font-weight:700">✅ Pago '+_dt+'</span> '
-                              +'<button class="btn-modern btn-sm btn-warning" data-aid="'+esc(a.id)+'" onclick="marcarPremio(this,\'desfazer\')" style="font-size:.71rem">↩️ Desfazer</button>'
-                            :'<button class="btn-modern btn-sm btn-success" data-aid="'+esc(a.id)+'" onclick="marcarPremio(this,\'marcar\')" style="font-size:.74rem">💰 Marcar Pago</button>';
+                              +'<button class="btn-modern btn-sm btn-warning" data-aid="'+esc(v.aposta_id)+'" onclick="marcarPremio(this,\'desfazer\')" style="font-size:.71rem">↩️ Desfazer</button>'
+                            :'<button class="btn-modern btn-sm btn-success" data-aid="'+esc(v.aposta_id)+'" onclick="marcarPremio(this,\'marcar\')" style="font-size:.74rem">💰 Marcar Pago</button>';
                         return '<tr style="border-bottom:1px solid #c8e6c9">'
-                            +'<td style="padding:7px 6px;font-weight:700">'+escUp(a.nome)+'</td>'
-                            +'<td style="padding:7px 6px;font-size:.78rem">'+esc(a.pix_key||'—')+'</td>'
-                            +'<td style="padding:7px 6px;text-align:right;font-weight:700;color:var(--green)">'+fmtBRL(financeiro.valor_individual)+'</td>'
+                            +'<td style="padding:7px 6px;font-weight:700">'+escUp(v.nome)+'</td>'
+                            +'<td style="padding:7px 6px;font-size:.78rem">'+esc(v.pix_key||'—')+'</td>'
+                            +'<td style="padding:7px 6px;text-align:right;font-weight:700;color:var(--green)">'+fmtBRL(v.valor_ganho)+'</td>'
                             +'<td style="padding:7px 6px;text-align:center">'+_sc+'</td>'
                             +'</tr>';
                     }).join('');
                     return '<div style="margin-top:18px;padding:14px;background:var(--green-lt);border:1px solid #a5d6a7;border-left:4px solid var(--green);border-radius:var(--r-md)">'
-                        +'<strong style="color:var(--green-dk);display:block;margin-bottom:10px">🏆 '+financeiro.qtd_vencedores+' vencedor'+(financeiro.qtd_vencedores>1?'es':'')+' — Prêmio individual: '+fmtBRL(financeiro.valor_individual)+'</strong>'
+                        +'<strong style="color:var(--green-dk);display:block;margin-bottom:10px">🏆 '+gd.financeiro.qtd_vencedores+' vencedor'+(gd.financeiro.qtd_vencedores>1?'es':'')+' — Prêmio individual: '+fmtBRL(gd.financeiro.valor_individual)+'</strong>'
                         +'<table style="width:100%;border-collapse:collapse;font-size:.82rem"><thead><tr>'
                         +'<th style="text-align:left;padding:5px 6px;font-size:.7rem;color:var(--text-3);border-bottom:1px solid #a5d6a7">Nome</th>'
                         +'<th style="text-align:left;padding:5px 6px;font-size:.7rem;color:var(--text-3);border-bottom:1px solid #a5d6a7">Chave PIX</th>'
