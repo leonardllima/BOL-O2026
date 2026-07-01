@@ -2322,7 +2322,14 @@ async function carregarFinanceiro(){
         let url=`/api/admin/apostas?page=1`;
         if(jogoId)url+=`&jogo_id=${encodeURIComponent(jogoId)}`;
         if(status)url+=`&status=${encodeURIComponent(status)}`;
-        const [dashRes,apostasRes]=await Promise.all([adminFetch('/api/admin/dashboard'),adminFetch(url)]);
+        let dashUrl='/api/admin/dashboard';
+        if(jogoId||status){
+            const dp=new URLSearchParams();
+            if(jogoId)dp.set('jogo_id',jogoId);
+            if(status)dp.set('status',status);
+            dashUrl+=`?${dp.toString()}`;
+        }
+        const [dashRes,apostasRes]=await Promise.all([adminFetch(dashUrl),adminFetch(url)]);
         const dash=await dashRes.json();
         const {apostas}=await apostasRes.json();
 
