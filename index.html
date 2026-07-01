@@ -376,15 +376,6 @@
     }
     .bolao-banner-stats strong { color: var(--yellow); }
 
-    .taxa-info-box {
-        background: var(--orange-lt); border: 1px solid #ffcc80;
-        border-left: 4px solid var(--orange);
-        border-radius: var(--r-sm); padding: 10px 14px;
-        margin-bottom: 12px; font-size: .8rem; color: var(--text);
-        line-height: 1.5;
-    }
-    .taxa-info-box strong { color: var(--orange); }
-
     .palpite-item {
         display: flex; gap: 8px; margin-bottom: 8px; align-items: center;
         padding: 10px 12px; background: var(--surface-2);
@@ -764,12 +755,13 @@
         </div>
 
         <div style="margin:12px 14px 4px;display:flex;flex-direction:column;gap:8px">
+            <div style="padding:12px 16px;background:var(--yellow);border:2px solid var(--yellow-dk);border-radius:var(--r-sm);font-size:.82rem;color:var(--blue-dk);line-height:1.5;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.12)">
+                <div style="font-weight:800">⚽ REGRAS: <span style="font-weight:600">o vencedor é quem acertar o placar do <u>TEMPO NORMAL</u>. Prorrogação e pênaltis não entram na contagem do palpite.</span></div>
+                <div style="font-weight:600;font-size:.78rem;margin-top:7px;padding-top:7px;border-top:1px solid rgba(0,26,79,.2)">⚠️ Se nenhum participante acertar o placar exato, o valor será devolvido via PIX informado no cadastro, com desconto da taxa de 10%.</div>
+            </div>
             <div style="padding:12px 16px;background:#fff3e0;border:2px solid var(--orange);border-radius:var(--r-sm);font-size:.82rem;font-weight:700;color:#b34000;line-height:1.5;text-align:center">
                 ⚠️ TAXA ADMINISTRATIVA: 10% sobre o valor arrecadado.
                 <div style="font-weight:400;font-size:.76rem;color:#7a2e00;margin-top:3px">Exemplo: R$ 100,00 arrecadados → Taxa R$ 10,00 → Prêmio R$ 90,00</div>
-            </div>
-            <div style="padding:12px 16px;background:#fff3e0;border:2px solid var(--orange);border-radius:var(--r-sm);font-size:.76rem;font-weight:500;color:#7a2e00;line-height:1.5;text-align:center">
-                ⚠️ Se nenhum participante acertar o placar exato, o valor será devolvido via PIX informado no cadastro, com desconto da taxa de 10%.
             </div>
         </div>
         <div id="bolao-btn-wrap" style="margin:14px auto 0;max-width:300px">
@@ -814,11 +806,13 @@
                 <span>🏆 Prêmio: <strong id="bstat-premio">—</strong></span>
             </div>
             <p style="font-size:.7rem;opacity:.65;margin-top:6px">* valores referentes a apostas pagas e validadas</p>
+            <div style="margin-top:10px;padding:10px 14px;background:var(--yellow);border:2px solid var(--yellow-dk);border-radius:var(--r-sm);font-size:.78rem;color:var(--blue-dk);line-height:1.45;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.25)">
+                <div style="font-weight:800">⚽ REGRAS: <span style="font-weight:600">o vencedor é quem acertar o placar do <u>TEMPO NORMAL</u>. Prorrogação e pênaltis não entram na contagem do palpite.</span></div>
+                <div style="font-weight:600;font-size:.72rem;margin-top:6px;padding-top:6px;border-top:1px solid rgba(0,26,79,.2)">⚠️ Se nenhum participante acertar o placar exato, o valor será devolvido via PIX informado no cadastro, com desconto da taxa de 10%.</div>
+            </div>
             <div style="margin-top:8px;padding:8px 12px;background:rgba(255,152,0,.18);border:1px solid rgba(255,152,0,.5);border-radius:var(--r-sm);font-size:.74rem;font-weight:700;color:#ffe0b2;line-height:1.4;text-align:center">
                 ⚠️ TAXA ADMINISTRATIVA: 10% sobre o valor arrecadado
-            </div>
-            <div style="margin-top:5px;padding:7px 12px;background:rgba(255,152,0,.12);border-left:3px solid rgba(255,152,0,.6);border-radius:3px;font-size:.7rem;color:rgba(255,255,255,.8);line-height:1.4">
-                ⚠️ Sem acertadores? Devolução via PIX com desconto de 10%.
+                <div style="font-weight:400;font-size:.68rem;color:rgba(255,255,255,.75);margin-top:2px">Exemplo: 20 palpites × R$ 5,00 = R$ 100,00 bruto → Taxa R$ 10,00 → Prêmio R$ 90,00</div>
             </div>
         </div>
         <input type="text" id="bolao-nome" placeholder="Nome Completo *" autocomplete="name">
@@ -831,7 +825,6 @@
             <option value="aleatoria">Chave PIX — Chave Aleatória</option>
             <option value="cnpj">Chave PIX — CNPJ</option>
         </select>
-        <div class="taxa-info-box">ℹ️ <strong>IMPORTANTE:</strong> Taxa administrativa de <strong>10%</strong>. Exemplo: 20 palpites × R$ 5,00 = <strong>R$ 100,00</strong> bruto → Taxa: <strong>R$ 10,00</strong> → Prêmio: <strong>R$ 90,00</strong></div>
         <div class="form-error" id="bolao-form-error"></div>
         <div id="lista-palpites"></div>
         <button class="btn-modern btn-ghost btn-block" id="add-palpite" type="button" style="margin-bottom:13px">+ Adicionar Palpite</button>
