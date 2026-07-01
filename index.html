@@ -2462,13 +2462,26 @@ async function carregarTodosResultados(){
                 :'<span style="background:var(--green-lt);color:var(--green-dk);padding:2px 8px;border-radius:10px;font-size:.73rem;font-weight:600">🏆 '+r.qtd_vencedores+'×</span>'
                  +' <span style="font-size:.73rem;color:var(--green-dk);font-weight:700">'+fmtBRL(r.valor_individual)+'</span>'
                  +' <span style="font-size:.71rem;color:var(--text-3)">cada</span>';
-            // Linha de ganhadores: nomes quando houver, ou mensagem de ausência
+            // Bloco de ganhadores: mini-tabela quando houver, ou mensagem de ausência
             const nomes=Array.isArray(r.vencedores)?r.vencedores:[];
-            const ganhadoresLinha=r.sem_ganhadores
-                ?'<div style="margin-top:6px;font-size:.76rem;color:#b34000">Não houve ganhadores neste jogo.</div>'
-                :(nomes.length
-                    ?'<div style="margin-top:6px;font-size:.78rem;color:var(--text-2)"><span style="font-weight:700;color:var(--green-dk)">🏆 Ganhadores:</span> '+nomes.map(function(n){return esc(n)}).join(', ')+'</div>'
-                    :'');
+            let ganhadoresLinha;
+            if(r.sem_ganhadores){
+                ganhadoresLinha='<div style="margin-top:8px;font-size:.76rem;color:#b34000;background:#fff3e0;border:1px solid #ffd7ad;border-radius:8px;padding:8px 12px">Não houve ganhadores neste jogo — os valores serão devolvidos.</div>';
+            }else if(nomes.length){
+                const linhas=nomes.map(function(n,i){
+                    return '<tr style="border-top:1px solid var(--border)">'
+                        +'<td style="padding:5px 8px;color:var(--text-3);font-size:.72rem;width:26px;text-align:center">'+(i+1)+'</td>'
+                        +'<td style="padding:5px 8px;font-weight:600;font-size:.78rem">'+esc(n)+'</td>'
+                        +'<td style="padding:5px 8px;text-align:right;color:var(--green-dk);font-weight:700;font-size:.76rem;white-space:nowrap">'+fmtBRL(r.valor_individual)+'</td>'
+                        +'</tr>';
+                }).join('');
+                ganhadoresLinha='<div style="margin-top:8px;border:1px solid var(--border);border-radius:8px;overflow:hidden;max-width:420px">'
+                    +'<div style="background:var(--green-lt);color:var(--green-dk);font-weight:700;font-size:.74rem;padding:6px 10px">🏆 Ganhadores ('+nomes.length+')</div>'
+                    +'<table style="width:100%;border-collapse:collapse"><tbody>'+linhas+'</tbody></table>'
+                    +'</div>';
+            }else{
+                ganhadoresLinha='';
+            }
             return '<div style="display:flex;align-items:flex-start;gap:10px;padding:11px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap">'
                 +'<div style="flex:1;min-width:0">'
                 +'<div style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:.88rem;flex-wrap:wrap">'
@@ -2486,34 +2499,83 @@ async function carregarTodosResultados(){
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   BOOTSTRAP / INICIALIZAÇÃO DA PÁGINA  (correção: fetchLiveDadosCopa nunca
-   era chamada → status travava em "Aguardando..." e o botão não reagia)
+   BOOTSTRAP / INICIALIZAÇÃO DA PÁGINA
+   Religa TODA a interatividade de nível superior que se perdeu no refactor:
+   tema, Gerenciar, Fazer Palpite, modais, login admin, abas, filtros e exports.
    ══════════════════════════════════════════════════════════════════════════ */
 (function initApp(){
+    // Helpers seguros (não quebram se um elemento/função não existir)
+    function on(id, ev, fn){ var e = document.getElementById(id); if (e) e.addEventListener(ev, fn); }
+    function val(id){ var e = document.getElementById(id); return e ? e.value : ''; }
+    function call(name){ return (typeof window[name] === 'function') ? window[name] : null; }
+    function safe(fn){ return function(){ try { if (fn) fn.apply(null, arguments); } catch(err){ console.error('[UI]', err); } }; }
+
     function boot(){
-        // 1) Botão "Atualizar" → força busca sem cache (fresh)
-        var btn = document.getElementById('btn-atualizar');
-        if (btn) btn.addEventListener('click', function(){ fetchLiveDadosCopa(false); });
+        /* ── Cabeçalho ────────────────────────────────────────────────────── */
+        on('theme-btn',    'click', safe(function(){ if (typeof toggleTheme     === 'function') toggleTheme();     }));
+        on('btn-gerenciar','click', safe(function(){ if (typeof abrirAdminLogin === 'function') abrirAdminLogin(); }));
+        on('btn-atualizar','click', safe(function(){ if (typeof fetchLiveDadosCopa === 'function') fetchLiveDadosCopa(false); }));
 
-        // 2) Primeira carga dos dados da Copa (usa cache do Worker = mais leve)
+        /* ── Card do bolão ────────────────────────────────────────────────── */
+        on('btn-bolao','click', safe(function(){ if (typeof abrirBolao === 'function') abrirBolao(); }));
+
+        /* ── Modal do bolão ───────────────────────────────────────────────── */
+        on('add-palpite',   'click', safe(function(){ if (typeof adicionarCampoPalpite === 'function') adicionarCampoPalpite(); }));
+        on('cancelar-bolao','click', safe(function(){ closeModal('modal-bolao'); }));
+        on('confirmar-bolao','click', safe(function(){ if (typeof enviarBolao === 'function') enviarBolao(); }));
+        // Máscara de telefone no campo de contato
+        var contato = document.getElementById('bolao-contato');
+        if (contato && typeof applyPhoneMask === 'function') applyPhoneMask(contato);
+
+        /* ── Login admin ──────────────────────────────────────────────────── */
+        on('admin-login-cancel', 'click', safe(function(){ closeModal('modal-admin-login'); }));
+        on('admin-login-confirm','click', safe(function(){ if (typeof fazerLoginAdmin === 'function') fazerLoginAdmin(); }));
+        on('admin-senha','keydown', safe(function(e){ if (e.key === 'Enter' && typeof fazerLoginAdmin === 'function') fazerLoginAdmin(); }));
+
+        /* ── Abas do painel admin ─────────────────────────────────────────── */
+        document.querySelectorAll('.admin-tab').forEach(function(t){
+            t.addEventListener('click', safe(function(){ if (typeof switchAdminTab === 'function') switchAdminTab(t.dataset.tab); }));
+        });
+
+        /* ── Filtros do admin ─────────────────────────────────────────────── */
+        on('btn-filtrar-apostas','click', safe(function(){ try { apostasPage = 1; } catch(_){}; if (typeof carregarApostas === 'function') carregarApostas(); }));
+        on('btn-filtrar-participantes','click', safe(function(){ if (typeof carregarParticipantes === 'function') carregarParticipantes(); }));
+        on('btn-filtrar-palpites','click', safe(function(){ if (typeof carregarPalpites === 'function') carregarPalpites(); }));
+        on('btn-filtrar-fin','click', safe(function(){ if (typeof carregarFinanceiro === 'function') carregarFinanceiro(); }));
+
+        /* ── Exports CSV do admin ─────────────────────────────────────────── */
+        on('btn-export-apostas','click', safe(function(){ if (typeof exportarDados === 'function') exportarDados('apostas', val('filtro-aposta-jogo')); }));
+        on('btn-exportar-participantes','click', safe(function(){ if (typeof exportarDados === 'function') exportarDados('participantes'); }));
+        on('btn-exportar-palpites','click', safe(function(){ if (typeof exportarDados === 'function') exportarDados('palpites', val('filtro-palpite-jogo')); }));
+        on('btn-export-fin','click', safe(function(){ if (typeof exportarDados === 'function') exportarDados('apostas', val('filtro-fin-jogo')); }));
+
+        /* ── Fechar modais: botões X, clique no fundo e tecla Esc ─────────── */
+        document.querySelectorAll('.modal-close[data-close]').forEach(function(b){
+            b.addEventListener('click', safe(function(){ closeModal(b.dataset.close); }));
+        });
+        document.querySelectorAll('.modal-overlay').forEach(function(ov){
+            ov.addEventListener('click', function(e){ if (e.target === ov) closeModal(ov.id); });
+        });
+        document.addEventListener('keydown', function(e){
+            if (e.key === 'Escape'){
+                var aberto = document.querySelector('.modal-overlay.active');
+                if (aberto) closeModal(aberto.id);
+            }
+        });
+
+        /* ── Cargas iniciais de dados ─────────────────────────────────────── */
         if (typeof fetchLiveDadosCopa === 'function') fetchLiveDadosCopa(true);
-
-        // 3) Conteúdo estático/derivado que também depende de inicialização
         if (typeof renderSquad === 'function') renderSquad();
         if (typeof carregarProximaPartidaParaBolao === 'function') carregarProximaPartidaParaBolao();
         if (typeof carregarUltimoResultado === 'function') carregarUltimoResultado();
         if (typeof carregarTodosResultados === 'function') carregarTodosResultados();
 
-        // 4) Auto-refresh a cada 60s (auto=true → usa cache, não martela a origem)
-        setInterval(function(){
-            if (typeof fetchLiveDadosCopa === 'function') fetchLiveDadosCopa(true);
-        }, 60000);
+        /* ── Auto-refresh a cada 60s (usa cache do Worker) ────────────────── */
+        setInterval(function(){ if (typeof fetchLiveDadosCopa === 'function') fetchLiveDadosCopa(true); }, 60000);
     }
 
-    if (document.readyState === 'loading')
-        document.addEventListener('DOMContentLoaded', boot);
-    else
-        boot();
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
 })();
 </script>
 </body>
